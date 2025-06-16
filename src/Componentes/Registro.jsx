@@ -84,10 +84,10 @@ export default function Registro() {
   if (userData) {
     return (
       <>
-        <div className="size-full flex flex-col itmes-center p-4 md:pl-[300px]">
-          <div className="w-full h-[180px] flex flex-col items-center justify-center rounded-[35px] p-3 bg-gradient-to-t from-[#ffc600] to-[#ffa600]">
-            <p className="text-white font-bold text-[20px]">Ingreso Total:</p>
-            <p className="text-white font-[900] text-[50px] -mt-2 truncate">
+        <div className="size-full flex flex-col itmes-center p-4 md:pl-[300px] pb-[200px]">
+          <div className="w-full h-[180px] flex flex-col items-center justify-center rounded-[35px] p-3 bg-gradient-to-t from-[#ffc600] to-[#ffa600] md:items-start md:justify-start md:p-5">
+            <p className="text-white font-bold text-[20px] md:text-[30px]">Ingreso Total:</p>
+            <p className="text-white font-[900] text-[50px] -mt-2 truncate md:text-[70px]">
               S/. {gananciaTotal.toFixed(2)}
             </p>
           </div>

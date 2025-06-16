@@ -197,7 +197,7 @@ export default function Caja({
           <h2 className="font-bold text-[28px] my-3">Movimientos</h2>
 
           <div className="flex flex-col gap-[25px]">
-            {movimientos.map((move, index) => {
+            {movimientos.slice().reverse().map((move, index) => {
               const fecha = new Date(move.fecha);
 
               const horaLegible = fecha
@@ -260,7 +260,7 @@ export default function Caja({
           <h2 className="font-bold text-[28px] my-3">Gastos</h2>
 
           <div className="flex flex-col gap-[25px]">
-            {gasto.map((move, index) => {
+            {gasto.slice().reverse().map((move, index) => {
               const fecha = new Date(move.fecha);
 
               const horaLegible = fecha

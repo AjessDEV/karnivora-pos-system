@@ -19,35 +19,52 @@ export default function Ventas() {
   const { userData, loading } = useUser();
 
   useEffect(() => {
-    if (userData) {
-      const today = new Date().toLocaleDateString('en-CA');
-      const lastLoginDate = localStorage.getItem("lastLoginDate");
+  const run = async () => {
+    if (!userData?.sucursal_id || !userData?.sucursal_nombre) return;
 
-      if (lastLoginDate && lastLoginDate !== today) {
-        const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
-        const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
-        const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
-        const total = efectivo + yapePlin + tarjeta;
+    const today = new Date().toLocaleDateString('en-CA');
+    const lastLoginDate = localStorage.getItem("lastLoginDate");
 
-        guardarVentasAntriores({
-          fecha: lastLoginDate,
-          sucursal_id: userData.sucursal_id,
-          total,
-          sucursal_nombre: userData.sucursal_nombre
-        });
+    if (lastLoginDate && lastLoginDate !== today) {
+      const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
+      const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
+      const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
+      const total = efectivo + yapePlin + tarjeta;
 
-        localStorage.setItem("efectivo", "0");
-        localStorage.setItem("yape/plin", "0");
-        localStorage.setItem("tarjeta", "0");
-        localStorage.setItem("pedidos", []);
-        localStorage.setItem("movimientos", []);
+      guardarVentasAntriores({
+        fecha: lastLoginDate,
+        sucursal_id: userData.sucursal_id,
+        total,
+        sucursal_nombre: userData.sucursal_nombre
+      });
 
-        actualizarGanancia(0, userData.sucursal_id, userData.sucursal_nombre)
-      }
-
-      localStorage.setItem("lastLoginDate", today);
+      localStorage.setItem("efectivo", "0");
+      localStorage.setItem("yape/plin", "0");
+      localStorage.setItem("tarjeta", "0");
+      localStorage.setItem("pedidos", JSON.stringify([]));
+      localStorage.setItem("movimientos", JSON.stringify([]));
+      localStorage.setItem("gastos", JSON.stringify([]));
+      await resetGanancias(userData.sucursal_id);
     }
-  }, [userData]);
+
+    localStorage.setItem("lastLoginDate", today);
+
+  };
+
+  run();
+}, [userData]);
+
+const resetGanancias = async (sucursalId) => {
+  const { error } = await supabase
+    .from('ganancias')
+    .eq('sucursal_id', sucursalId)
+    .update({ total_ganancia: 0 })
+
+  if (error) {
+    console.error('error al resetear ganancias', error.message);
+  }
+};
+
 
   async function guardarVentasAntriores({ fecha, sucursal_id, total, sucursal_nombre }) {
     const { error } = await supabase.from("ventas_diarias").insert({
@@ -1026,7 +1043,7 @@ export default function Ventas() {
             addProductMenu
               ? "bottom-0 opacity-100"
               : "bottom-[-100%] opacity-0 pointer-events-none"
-          } rounded-t-[50px] fixed bottom-0 left-0 bg-white flex flex-col justify-between items-center transition-all ease-in-out duration-500`}
+          } rounded-t-[50px] fixed bottom-0 left-0 md:max-w-[700px] md:right-0 md:mx-auto bg-white flex flex-col justify-between items-center transition-all ease-in-out duration-500`}
         >
           <h2 className="text-center absolute top-[-20px] bg-[#ffa600] text-white text-[30px] font-[800] p-[5px_10px] rounded-[20px] shadow-[0_20px_30px_#ffa60025]">
             Nuevo Producto
@@ -1241,13 +1258,13 @@ export default function Ventas() {
           <div className="flex gap-[15px] w-full p-[20px_0]">
             <button
               onClick={toggleAddProductMenu}
-              className="p-[10px] w-full bg-gray-100 rounded-[10px]"
+              className="p-[10px] w-full bg-gray-100 rounded-[10px] cursor-pointer"
             >
               Cancelar
             </button>
             <button
               onClick={createProduct}
-              className="p-[10px] w-full bg-[#ffa600] font-[800] text-white shadow-[0_20px_30px_#ffa60025] rounded-[10px]"
+              className="p-[10px] w-full bg-[#ffa600] font-[800] cursor-pointer text-white shadow-[0_20px_30px_#ffa60025] rounded-[10px]"
             >
               Crear Producto
             </button>
