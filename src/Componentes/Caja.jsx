@@ -105,7 +105,7 @@ export default function Caja({
 
     const docDefinition = {
       pageSize: { width: 165, height: "auto" }, // 58 mm en puntos
-      pageMargins: [10, 10, 10, 10],
+      pageMargins: [5, 5, 5, 5],
       content: [
         {
           text: "REPORTE DE VENTA",
@@ -134,7 +134,7 @@ export default function Caja({
           table: {
             widths: [20, "*", 13, 13, 13, 13], // ajustado
             body: [
-              ["#P", "Nom", "Total", "Efec", "Yape", "Tjta"], // encabezados más cortos
+              ["#P", "Nomb.", "Tot.", "Efe.", "Yap.", "Tjta."], // encabezados más cortos
               ...movimientos.map((item) => [
                 item.tipo_pago || "",
                 item.nombre?.substring(0, 10) || "", // nombre más corto
@@ -151,7 +151,7 @@ export default function Caja({
             hLineColor: () => "#000",
             vLineColor: () => "#000",
           },
-          fontSize: 5,
+          fontSize: 7,
           margin: [0, 0, 0, 5],
         },
         { text: "Gastos", style: "sectionHeader" },
@@ -173,8 +173,8 @@ export default function Caja({
             hLineColor: () => "#000",
             vLineColor: () => "#000",
           },
-          fontSize: 5,
-          margin: [0, 0, 0, 5],
+          fontSize: 7,
+          margin: [0, 0, 0, 10],
         },
 
         {
