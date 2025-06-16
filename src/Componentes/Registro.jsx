@@ -125,7 +125,7 @@ export default function Registro() {
                     <p className="font-bold text-[20px]">{venta.sucursal_name}</p>
                     <p className="font-bold text-[#707070]">{venta.fecha.slice(0, 10)}</p>
                   </div>
-                  <p className="font-black text-[20px] text-[#26ce6c]">+ S/. {venta.total_ganancia}</p>
+                  <p className="font-black text-[20px] text-[#26ce6c]">+ S/. {venta.total_ganancia.toFixed(2)}</p>
                 </div>
               )
             })}
