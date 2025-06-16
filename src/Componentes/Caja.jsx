@@ -1,5 +1,9 @@
 import { IconEdit } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
+import { useUser } from "../supComponentes/UserContext";
+
+import pdfMake from "pdfmake/build/pdfmake";
+import "pdfmake/build/vfs_fonts";
 
 export default function Caja({
   window,
@@ -8,6 +12,8 @@ export default function Caja({
   tarjeta,
   movimientos,
 }) {
+  const { userData, loading } = useUser();
+
   const [openInput, setOpenInput] = useState(false);
   const toggleCashInput = () => {
     setOpenInput((prev) => !prev);
@@ -48,26 +54,26 @@ export default function Caja({
       q_tar: 0,
       ing_eg: false,
       reason: decreaseReason,
-    }
+    };
 
-    guardarGasto(newMove)
+    guardarGasto(newMove);
   }
 
-  const [gasto, setGasto] = useState([])
+  const [gasto, setGasto] = useState([]);
 
   useEffect(() => {
-      const data = localStorage.getItem("gastos");
-      if (data) {
-        setGasto(JSON.parse(data));
-      }
-    }, []);
+    const data = localStorage.getItem("gastos");
+    if (data) {
+      setGasto(JSON.parse(data));
+    }
+  }, []);
 
-  function guardarGasto (nuevoGasto) {
+  function guardarGasto(nuevoGasto) {
     const updated = [...gasto, nuevoGasto];
 
     setGasto(updated);
     localStorage.setItem("gastos", JSON.stringify(updated));
-  };
+  }
 
   useEffect(() => {
     localStorage.setItem("inicio_caja", JSON.stringify(startingCash));
@@ -85,6 +91,121 @@ export default function Caja({
     localStorage.setItem("tarjeta", JSON.stringify(tarjeta));
   }, [tarjeta]);
 
+  function generarReporteVenta(userData) {
+    const movimientos = JSON.parse(localStorage.getItem("movimientos") || "[]");
+    const gastos = JSON.parse(localStorage.getItem("gastos") || "[]");
+
+    const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
+    const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
+    const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
+    const inicioCaja = parseFloat(localStorage.getItem("inicio_caja") || "0");
+    const total = efectivo + yapePlin + tarjeta;
+
+    const fechaHora = new Date().toLocaleString("es-PE");
+
+    const docDefinition = {
+      pageSize: { width: 165, height: "auto" }, // 58 mm en puntos
+      pageMargins: [10, 10, 10, 10],
+      content: [
+        {
+          text: "REPORTE DE VENTA",
+          alignment: "center",
+          bold: true,
+          fontSize: 14,
+          margin: [0, 0, 0, 5],
+        },
+        { text: `Fecha y hora: ${fechaHora}`, fontSize: 9, margin: [0, 0, 0, 2] },
+        {
+          text: `Cajero: ${userData.user_nombre}`,
+          fontSize: 9,
+          margin: [0, 0, 0, 2]
+        },
+        {
+          text: `Sucursal: ${userData.sucursal_nombre}`,
+          fontSize: 9,
+          margin: [0, 0, 0, 5]
+        },
+
+        {
+          text: "Movimientos",
+          style: "sectionHeader",
+        },
+        {
+          table: {
+            widths: [20, "*", 13, 13, 13, 13], // ajustado
+            body: [
+              ["#P", "Nom", "Total", "Efec", "Yape", "Tjta"], // encabezados más cortos
+              ...movimientos.map((item) => [
+                item.tipo_pago || "",
+                item.nombre?.substring(0, 10) || "", // nombre más corto
+                item.monto_pagado?.toFixed(2) || "0.00",
+                item.q_efe?.toFixed(2) || "0.00",
+                item.q_yape?.toFixed(2) || "0.00",
+                item.q_tar?.toFixed(2) || "0.00",
+              ]),
+            ],
+          },
+          layout: {
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: () => "#000",
+            vLineColor: () => "#000",
+          },
+          fontSize: 5,
+          margin: [0, 0, 0, 5],
+        },
+        { text: "Gastos", style: "sectionHeader" },
+        {
+          table: {
+            widths: ["*", "auto", "auto"],
+            body: [
+              ["Razón", "Monto", "Fecha"],
+              ...gastos.map((item) => [
+                item.reason || "",
+                item.monto_pagado?.toFixed(2) || "0.00",
+                item.fecha || "",
+              ]),
+            ],
+          },
+          layout: {
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0.5,
+            hLineColor: () => "#000",
+            vLineColor: () => "#000",
+          },
+          fontSize: 5,
+          margin: [0, 0, 0, 5],
+        },
+
+        {
+          text: `Caja inicial: S/ ${inicioCaja.toFixed(2)}`,
+          fontSize: 11,
+          bold: true,
+          margin: [0, 0, 0, 7],
+        },
+        { text: `Efectivo: S/ ${efectivo.toFixed(2)}`, fontSize: 9 },
+        { text: `Yape/Plin: S/ ${yapePlin.toFixed(2)}`, fontSize: 9 },
+        { text: `Tarjeta: S/ ${tarjeta.toFixed(2)}`, fontSize: 9 },
+
+        {
+          text: `\nTOTAL VENTA: S/ ${total.toFixed(2)}`,
+          bold: true,
+          fontSize: 12,
+          margin: [0, 10, 0, 0],
+        },
+      ],
+      styles: {
+        sectionHeader: {
+          bold: true,
+          fontSize: 10,
+          margin: [0, 10, 0, 2],
+        },
+      },
+    };
+
+    pdfMake.createPdf(docDefinition).open();
+  }
+
   return (
     <div
       className={`w-full absolute ${
@@ -93,6 +214,13 @@ export default function Caja({
           : "top-[100px] opacity-0 pointer-events-none"
       } transition-all ease-in-out duration-200 pb-[100px]`}
     >
+      <button
+        onClick={() => generarReporteVenta(userData)}
+        className="font-bold text-[20px] px-3 py-2 bg-[#26ce6c] text-white rounded-full fixed bottom-[120px] right-4 md:bottom-4 md:text-[25px] cursor-pointer border-3 border-[#26ce6c] hover:bg-white hover:text-[#26ce6c] transition-all duration-200"
+      >
+        Imprimir Reporte
+      </button>
+
       <h2 className="font-bold text-[28px] text-center mb-[30px]">
         Caja Registradora
       </h2>
@@ -149,7 +277,9 @@ export default function Caja({
           </p>
         </div>
         <p className="font-[900] w-full text-[30px] mt-2">Venta Total:</p>
-        <p className="font-[900] w-full text-[40px] text-[#26ce6c]">S/. {formatPrice(efectivo + yapeplin + tarjeta)}</p>
+        <p className="font-[900] w-full text-[40px] text-[#26ce6c]">
+          S/. {formatPrice(efectivo + yapeplin + tarjeta)}
+        </p>
 
         <button
           onClick={toggleDecraseInput}
@@ -197,126 +327,156 @@ export default function Caja({
           <h2 className="font-bold text-[28px] my-3">Movimientos</h2>
 
           <div className="flex flex-col gap-[25px]">
-            {movimientos.slice().reverse().map((move, index) => {
-              const fecha = new Date(move.fecha);
+            {movimientos
+              .slice()
+              .reverse()
+              .map((move, index) => {
+                const fecha = new Date(move.fecha);
 
-              const horaLegible = fecha
-                .toLocaleTimeString("es-ES", {
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: true,
-                })
-                .replace("p. m.", "PM")
-                .replace("a. m.", "AM");
+                const horaLegible = fecha
+                  .toLocaleTimeString("es-ES", {
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })
+                  .replace("p. m.", "PM")
+                  .replace("a. m.", "AM");
 
-              return (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex flex-col gap-1">
-                    <p className="font-bold text-[20px]">{move.tipo_pago}</p>
-                    <div className="flex gap-2 flex-wrap">
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <p className="font-bold text-[20px]">{move.tipo_pago}</p>
+                      <div className="flex gap-2 flex-wrap">
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.m_efectivo ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
+                        </p>
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.m_yape ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.m_yape}: S/. {formatPrice(move.q_yape)}
+                        </p>
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.m_tarjeta ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
+                        </p>
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.nombre !== "Sin Nombre" ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.nombre}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end">
                       <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.m_efectivo ? "block" : "hidden"
+                        className={`font-[900] text-[20px] ${
+                          move.ing_eg === true
+                            ? "text-[#26ce6c]"
+                            : "text-[#ff3333]"
                         }`}
                       >
-                        {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
+                        {move.ing_eg === true ? "+" : "-"} S/.{" "}
+                        {formatPrice(move.monto_pagado)}
                       </p>
-                      <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.m_yape ? "block" : "hidden"
-                        }`}
-                      >
-                        {move.m_yape}: S/. {formatPrice(move.q_yape)}
-                      </p>
-                      <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.m_tarjeta ? "block" : "hidden"
-                        }`}
-                      >
-                        {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
-                      </p>
-                      <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.nombre !== 'Sin Nombre' ? "block" : "hidden"
-                        }`}
-                      >
-                        {move.nombre}
+                      <p className="font-bold text-[15px] text-[#00000050]">
+                        {horaLegible}
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex flex-col items-end">
-                    <p className={`font-[900] text-[20px] ${move.ing_eg === true ? 'text-[#26ce6c]' : 'text-[#ff3333]'}`}>
-                      {move.ing_eg === true ? '+' : '-'} S/. {formatPrice(move.monto_pagado)}
-                    </p>
-                    <p className="font-bold text-[15px] text-[#00000050]">{horaLegible}</p>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
         <div className="md:max-w-[700px]">
           <h2 className="font-bold text-[28px] my-3">Gastos</h2>
 
           <div className="flex flex-col gap-[25px]">
-            {gasto.slice().reverse().map((move, index) => {
-              const fecha = new Date(move.fecha);
+            {gasto
+              .slice()
+              .reverse()
+              .map((move, index) => {
+                const fecha = new Date(move.fecha);
 
-              const horaLegible = fecha
-                .toLocaleTimeString("es-ES", {
-                  hour: "numeric",
-                  minute: "numeric",
-                  hour12: true,
-                })
-                .replace("p. m.", "PM")
-                .replace("a. m.", "AM");
+                const horaLegible = fecha
+                  .toLocaleTimeString("es-ES", {
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
+                  })
+                  .replace("p. m.", "PM")
+                  .replace("a. m.", "AM");
 
-              return (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex flex-col gap-1">
-                    <p className="font-bold text-[20px]">{move.tipo_pago}</p>
-                    <div className="flex gap-2 flex-wrap">
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <p className="font-bold text-[20px]">{move.tipo_pago}</p>
+                      <div className="flex gap-2 flex-wrap">
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.m_efectivo ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
+                        </p>
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.m_yape ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.m_yape}: S/. {formatPrice(move.q_yape)}
+                        </p>
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.m_tarjeta ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
+                        </p>
+                        <p
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                            move.reason ? "block" : "hidden"
+                          }`}
+                        >
+                          {move.reason}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end">
                       <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.m_efectivo ? "block" : "hidden"
+                        className={`font-[900] text-[20px] ${
+                          move.ing_eg === true
+                            ? "text-[#26ce6c]"
+                            : "text-[#ff3333]"
                         }`}
                       >
-                        {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
+                        {move.ing_eg === true ? "+" : "-"} S/.{" "}
+                        {formatPrice(move.monto_pagado)}
                       </p>
-                      <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.m_yape ? "block" : "hidden"
-                        }`}
-                      >
-                        {move.m_yape}: S/. {formatPrice(move.q_yape)}
-                      </p>
-                      <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.m_tarjeta ? "block" : "hidden"
-                        }`}
-                      >
-                        {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
-                      </p>
-                      <p
-                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                          move.reason ? "block" : "hidden"
-                        }`}
-                      >
-                        {move.reason}
+                      <p className="font-bold text-[15px] text-[#00000050]">
+                        {horaLegible}
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex flex-col items-end">
-                    <p className={`font-[900] text-[20px] ${move.ing_eg === true ? 'text-[#26ce6c]' : 'text-[#ff3333]'}`}>
-                      {move.ing_eg === true ? '+' : '-'} S/. {formatPrice(move.monto_pagado)}
-                    </p>
-                    <p className="font-bold text-[15px] text-[#00000050]">{horaLegible}</p>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       </div>
