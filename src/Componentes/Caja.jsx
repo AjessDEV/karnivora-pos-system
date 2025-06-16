@@ -1,0 +1,325 @@
+import { IconEdit } from "@tabler/icons-react";
+import { useState, useEffect } from "react";
+
+export default function Caja({
+  window,
+  efectivo,
+  yapeplin,
+  tarjeta,
+  movimientos,
+}) {
+  const [openInput, setOpenInput] = useState(false);
+  const toggleCashInput = () => {
+    setOpenInput((prev) => !prev);
+  };
+  const [startingCash, setStartingCash] = useState(() => {
+    const valorGuardado = localStorage.getItem("inicio_caja");
+    return valorGuardado !== null ? JSON.parse(valorGuardado) : 200;
+  });
+
+  const [newStartingCash, setNewStartingCash] = useState(0);
+
+  const formatPrice = (value) => {
+    if (typeof value !== "number") return "";
+    return value.toFixed(2).replace(",", ".");
+  };
+
+  const [decreaseInput, setDecreaseInput] = useState(false);
+  const toggleDecraseInput = () => {
+    setDecreaseInput((prev) => !prev);
+  };
+  const [decreasedCash, setDecreasedCash] = useState(0);
+  const [decreaseReason, setDecreaseReason] = useState("");
+
+  function decreaseCash() {
+    setStartingCash(startingCash - parseFloat(decreasedCash));
+    setDecreaseReason("");
+
+    const newMove = {
+      fecha: new Date().toISOString(),
+      monto_pagado: parseFloat(decreasedCash),
+      numero_pedido: null,
+      tipo_pago: `Gasto de Caja`,
+      m_efectivo: 0,
+      m_yape: 0,
+      m_tarjeta: 0,
+      q_efe: 0,
+      q_yape: 0,
+      q_tar: 0,
+      ing_eg: false,
+      reason: decreaseReason,
+    }
+
+    guardarGasto(newMove)
+  }
+
+  const [gasto, setGasto] = useState([])
+
+  useEffect(() => {
+      const data = localStorage.getItem("gastos");
+      if (data) {
+        setGasto(JSON.parse(data));
+      }
+    }, []);
+
+  function guardarGasto (nuevoGasto) {
+    const updated = [...gasto, nuevoGasto];
+
+    setGasto(updated);
+    localStorage.setItem("gastos", JSON.stringify(updated));
+  };
+
+  useEffect(() => {
+    localStorage.setItem("inicio_caja", JSON.stringify(startingCash));
+  }, [startingCash]);
+
+  useEffect(() => {
+    localStorage.setItem("efectivo", JSON.stringify(efectivo));
+  }, [efectivo]);
+
+  useEffect(() => {
+    localStorage.setItem("yape/plin", JSON.stringify(yapeplin));
+  }, [yapeplin]);
+
+  useEffect(() => {
+    localStorage.setItem("tarjeta", JSON.stringify(tarjeta));
+  }, [tarjeta]);
+
+  return (
+    <div
+      className={`w-full absolute ${
+        window === "Caja"
+          ? "top-0 opacity-100"
+          : "top-[100px] opacity-0 pointer-events-none"
+      } transition-all ease-in-out duration-200 pb-[100px]`}
+    >
+      <h2 className="font-bold text-[28px] text-center mb-[30px]">
+        Caja Registradora
+      </h2>
+
+      <div>
+        <p className="font-bold md:text-[30px]">Inicio de Caja</p>
+        <div className="flex gap-4 relative max-w-max">
+          <p className="font-[900] text-[50px]">
+            S/. {formatPrice(startingCash)}
+          </p>
+          <button
+            onClick={toggleCashInput}
+            className="cursor-pointer bg-[#00000015] p-2 rounded-[10px] max-h-max active:bg-[#00000030] transition-all ease-in-out duration-100"
+          >
+            <IconEdit size={30} stroke={2} />
+          </button>
+          <div
+            className={`absolute w-[80%] max-h-max bg-[#eeeeee] top-0 left-0 ${
+              openInput ? "scale-100" : "scale-0"
+            } rounded-[15px] shadow-[0_0_30px_#00000020] p-2 flex flex-col gap-[10px] transition-all ease-in-out duration-200`}
+          >
+            <input
+              type="text"
+              placeholder="Ej. 200"
+              value={newStartingCash}
+              onChange={(e) => setNewStartingCash(e.target.value)}
+              className="font-[900] text-[40px] w-full border-3 border-[#e0e0e0] rounded-[10px] p-2 text-center"
+            />
+            <button
+              onClick={() => {
+                setStartingCash(parseFloat(newStartingCash));
+                setOpenInput(false);
+              }}
+              className={`${
+                newStartingCash > 0
+                  ? "bg-[#ffa600]"
+                  : "bg-[#e0e0e0] pointer-events-none"
+              } py-3 w-full font-bold text-white text-[20px] rounded-[10px] active:brightness-[0.95] transition-all ease-in-out duration-100`}
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+
+        <div className="flex gap-[10px] w-full">
+          <p className="font-bold w-full md:text-[25px]">
+            Efectivo: <br /> <b>S/. {formatPrice(efectivo)}</b>
+          </p>
+          <p className="font-bold w-full md:text-[25px]">
+            Yape/Plin: <br /> <b>S/. {formatPrice(yapeplin)}</b>
+          </p>
+          <p className="font-bold w-full md:text-[25px]">
+            Tarjeta: <br /> <b>S/. {formatPrice(tarjeta)}</b>
+          </p>
+        </div>
+        <p className="font-[900] w-full text-[30px] mt-2">Venta Total:</p>
+        <p className="font-[900] w-full text-[40px] text-[#26ce6c]">S/. {formatPrice(efectivo + yapeplin + tarjeta)}</p>
+
+        <button
+          onClick={toggleDecraseInput}
+          className="bg-[#ff3333] rounded-[10px] w-full py-4 my-3 text-white font-bold uppercase text-[20px] active:brightness-[0.98] transition-all ease-in-out duration-200 active:bg-[#ff333380] cursor-pointer md:max-w-[700px]"
+        >
+          Registrar Gasto
+        </button>
+        <div className="relative">
+          <div
+            className={`absolute w-full max-h-max bg-[#eeeeee] top-0 left-0 md:max-w-[700px] ${
+              decreaseInput ? "scale-100" : "scale-0"
+            } rounded-[15px] shadow-[0_0_30px_#00000020] p-2 flex flex-col gap-[10px] transition-all ease-in-out duration-200`}
+          >
+            <input
+              type="text"
+              placeholder="Gasto"
+              value={decreasedCash}
+              onChange={(e) => setDecreasedCash(e.target.value)}
+              className="font-[900] text-[40px] w-full border-3 border-[#e0e0e0] rounded-[10px] p-2 text-center"
+            />
+            <input
+              type="text"
+              placeholder="Motivo"
+              value={decreaseReason}
+              onChange={(e) => setDecreaseReason(e.target.value)}
+              className="font-[900] text-[40px] w-full border-3 border-[#e0e0e0] rounded-[10px] p-2 text-center"
+            />
+            <button
+              onClick={() => {
+                decreaseCash();
+                setDecreaseInput(false);
+              }}
+              className={`${
+                decreasedCash > 0
+                  ? "bg-[#ffa600]"
+                  : "bg-[#e0e0e0] pointer-events-none"
+              } py-3 w-full font-bold text-white text-[20px] rounded-[10px] active:brightness-[0.95] transition-all ease-in-out duration-100`}
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+
+        <div className="md:max-w-[700px]">
+          <h2 className="font-bold text-[28px] my-3">Movimientos</h2>
+
+          <div className="flex flex-col gap-[25px]">
+            {movimientos.map((move, index) => {
+              const fecha = new Date(move.fecha);
+
+              const horaLegible = fecha
+                .toLocaleTimeString("es-ES", {
+                  hour: "numeric",
+                  minute: "numeric",
+                  hour12: true,
+                })
+                .replace("p. m.", "PM")
+                .replace("a. m.", "AM");
+
+              return (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-bold text-[20px]">{move.tipo_pago}</p>
+                    <div className="flex gap-2 flex-wrap">
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.m_efectivo ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
+                      </p>
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.m_yape ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.m_yape}: S/. {formatPrice(move.q_yape)}
+                      </p>
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.m_tarjeta ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
+                      </p>
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.nombre !== 'Sin Nombre' ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.nombre}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end">
+                    <p className={`font-[900] text-[20px] ${move.ing_eg === true ? 'text-[#26ce6c]' : 'text-[#ff3333]'}`}>
+                      {move.ing_eg === true ? '+' : '-'} S/. {formatPrice(move.monto_pagado)}
+                    </p>
+                    <p className="font-bold text-[15px] text-[#00000050]">{horaLegible}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="md:max-w-[700px]">
+          <h2 className="font-bold text-[28px] my-3">Gastos</h2>
+
+          <div className="flex flex-col gap-[25px]">
+            {gasto.map((move, index) => {
+              const fecha = new Date(move.fecha);
+
+              const horaLegible = fecha
+                .toLocaleTimeString("es-ES", {
+                  hour: "numeric",
+                  minute: "numeric",
+                  hour12: true,
+                })
+                .replace("p. m.", "PM")
+                .replace("a. m.", "AM");
+
+              return (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <p className="font-bold text-[20px]">{move.tipo_pago}</p>
+                    <div className="flex gap-2 flex-wrap">
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.m_efectivo ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
+                      </p>
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.m_yape ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.m_yape}: S/. {formatPrice(move.q_yape)}
+                      </p>
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.m_tarjeta ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
+                      </p>
+                      <p
+                        className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
+                          move.reason ? "block" : "hidden"
+                        }`}
+                      >
+                        {move.reason}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end">
+                    <p className={`font-[900] text-[20px] ${move.ing_eg === true ? 'text-[#26ce6c]' : 'text-[#ff3333]'}`}>
+                      {move.ing_eg === true ? '+' : '-'} S/. {formatPrice(move.monto_pagado)}
+                    </p>
+                    <p className="font-bold text-[15px] text-[#00000050]">{horaLegible}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
