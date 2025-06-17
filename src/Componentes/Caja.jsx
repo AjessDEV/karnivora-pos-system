@@ -157,13 +157,12 @@ export default function Caja({
         { text: "Gastos", style: "sectionHeader" },
         {
           table: {
-            widths: ["*", "auto", "auto"],
+            widths: ["*", "auto"],
             body: [
-              ["Razón", "Monto", "Fecha"],
+              ["Razón", "Monto"],
               ...gastos.map((item) => [
                 item.reason || "",
                 item.monto_pagado?.toFixed(2) || "0.00",
-                item.fecha || "",
               ]),
             ],
           },

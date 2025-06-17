@@ -44,7 +44,9 @@ export default function Ventas() {
       localStorage.setItem("pedidos", JSON.stringify([]));
       localStorage.setItem("movimientos", JSON.stringify([]));
       localStorage.setItem("gastos", JSON.stringify([]));
-      await resetGanancias(userData.sucursal_id);
+      const sucId = userData?.sucursal_id
+
+      await resetGanancias(sucId);
     }
 
     localStorage.setItem("lastLoginDate", today);
@@ -57,8 +59,8 @@ export default function Ventas() {
 const resetGanancias = async (sucursalId) => {
   const { error } = await supabase
     .from('ganancias')
-    .eq('sucursal_id', sucursalId)
     .update({ total_ganancia: 0 })
+    .eq('sucursal_id', sucursalId)
 
   if (error) {
     console.error('error al resetear ganancias', error.message);
