@@ -134,7 +134,7 @@ export default function Caja({
           table: {
             widths: [20, "*", 13, 13, 13, 13], // ajustado
             body: [
-              ["#P", "Nomb.", "Tot.", "Efe.", "Yap.", "Tjta."], // encabezados más cortos
+              ["#P", "Nomb", "Tot", "Efe", "Yap", "Tjta"], // encabezados más cortos
               ...movimientos.map((item) => [
                 item.tipo_pago || "",
                 item.nombre?.substring(0, 10) || "", // nombre más corto
@@ -177,7 +177,7 @@ export default function Caja({
         },
 
         {
-          text: `Caja inicial: S/ ${inicioCaja.toFixed(2)}`,
+          text: `Caja: S/ ${inicioCaja.toFixed(2)}`,
           fontSize: 11,
           bold: true,
           margin: [0, 0, 0, 7],

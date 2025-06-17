@@ -31,7 +31,7 @@ export default function Ventas() {
       const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
       const total = efectivo + yapePlin + tarjeta;
 
-      guardarVentasAntriores({
+      await guardarVentasAntriores({
         fecha: lastLoginDate,
         sucursal_id: userData.sucursal_id,
         total,
