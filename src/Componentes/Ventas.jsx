@@ -19,56 +19,59 @@ export default function Ventas() {
   const { userData, loading } = useUser();
 
   useEffect(() => {
-  const run = async () => {
-    if (!userData?.sucursal_id || !userData?.sucursal_nombre) return;
+    const run = async () => {
+      if (!userData?.sucursal_id || !userData?.sucursal_nombre) return;
 
-    const today = new Date().toLocaleDateString('en-CA');
-    const lastLoginDate = localStorage.getItem("lastLoginDate");
+      const today = new Date().toLocaleDateString("en-CA");
+      const lastLoginDate = localStorage.getItem("lastLoginDate");
 
-    if (lastLoginDate && lastLoginDate !== today) {
-      const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
-      const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
-      const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
-      const total = efectivo + yapePlin + tarjeta;
+      if (lastLoginDate && lastLoginDate !== today) {
+        const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
+        const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
+        const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
+        const total = efectivo + yapePlin + tarjeta;
 
-      await guardarVentasAntriores({
-        fecha: lastLoginDate,
-        sucursal_id: userData.sucursal_id,
-        total,
-        sucursal_nombre: userData.sucursal_nombre
-      });
+        await guardarVentasAntriores({
+          fecha: lastLoginDate,
+          sucursal_id: userData.sucursal_id,
+          total,
+          sucursal_nombre: userData.sucursal_nombre,
+        });
 
-      localStorage.setItem("efectivo", "0");
-      localStorage.setItem("yape/plin", "0");
-      localStorage.setItem("tarjeta", "0");
-      localStorage.setItem("pedidos", JSON.stringify([]));
-      localStorage.setItem("movimientos", JSON.stringify([]));
-      localStorage.setItem("gastos", JSON.stringify([]));
-      const sucId = userData?.sucursal_id
+        localStorage.setItem("efectivo", "0");
+        localStorage.setItem("yape/plin", "0");
+        localStorage.setItem("tarjeta", "0");
+        localStorage.setItem("pedidos", JSON.stringify([]));
+        localStorage.setItem("movimientos", JSON.stringify([]));
+        localStorage.setItem("gastos", JSON.stringify([]));
+        const sucId = userData?.sucursal_id;
 
-      await resetGanancias(sucId);
+        await resetGanancias(sucId);
+      }
+
+      localStorage.setItem("lastLoginDate", today);
+    };
+
+    run();
+  }, [userData]);
+
+  const resetGanancias = async (sucursalId) => {
+    const { error } = await supabase
+      .from("ganancias")
+      .update({ total_ganancia: 0 })
+      .eq("sucursal_id", sucursalId);
+
+    if (error) {
+      console.error("error al resetear ganancias", error.message);
     }
-
-    localStorage.setItem("lastLoginDate", today);
-
   };
 
-  run();
-}, [userData]);
-
-const resetGanancias = async (sucursalId) => {
-  const { error } = await supabase
-    .from('ganancias')
-    .update({ total_ganancia: 0 })
-    .eq('sucursal_id', sucursalId)
-
-  if (error) {
-    console.error('error al resetear ganancias', error.message);
-  }
-};
-
-
-  async function guardarVentasAntriores({ fecha, sucursal_id, total, sucursal_nombre }) {
+  async function guardarVentasAntriores({
+    fecha,
+    sucursal_id,
+    total,
+    sucursal_nombre,
+  }) {
     const { error } = await supabase.from("ventas_diarias").insert({
       fecha,
       sucursal_id,
@@ -520,21 +523,16 @@ const resetGanancias = async (sucursalId) => {
 
   //
 
-  const [pedidos, setPedidos] = useState([]);
-
-  useEffect(() => {
-    const data = localStorage.getItem("pedidos");
-    if (data) {
-      setPedidos(JSON.parse(data));
-    }
-  }, []);
-
   const saveOrder = (newOrder) => {
-    const updated = [...pedidos, newOrder];
+  const pedidosGuardados = JSON.parse(localStorage.getItem("pedidos")) || [];
 
-    setPedidos(updated);
-    localStorage.setItem("pedidos", JSON.stringify(updated));
-  };
+  // Agregar el nuevo pedido
+  const updated = [...pedidosGuardados, newOrder];
+
+  // Guardar en localStorage
+  localStorage.setItem("pedidos", JSON.stringify(updated));
+};
+
 
   const numeroRandom = Math.floor(Math.random() * 1000);
   const idUnico = numeroRandom.toString().padStart(3, "0");
@@ -581,7 +579,7 @@ const resetGanancias = async (sucursalId) => {
 
     const move = {
       fecha: pedido.fecha,
-      monto_pagado: pedido.efectivo + pedido.yape + pedido.tarjeta - vuelto,
+      monto_pagado: pedido.efectivo + pedido.yape + pedido.tarjeta,
       numero_pedido: pedido.id,
       tipo_pago: `Pedido #${pedido.id}`,
       m_efectivo: pedido.efectivo > 0 ? "Efectivo" : null,
@@ -609,18 +607,23 @@ const resetGanancias = async (sucursalId) => {
 
     // IMPRIMIR TICKET DE VENTA
 
-    function generarTicketVenta(pedido) {
-      const fechaHora = new Date(pedido.fecha).toLocaleString("es-PE", {
+    function generarTicketVenta(orderSelected) {
+      const fechaHora = new Date(orderSelected.fecha).toLocaleString("es-PE", {
         dateStyle: "medium",
         timeStyle: "short",
       });
 
-      const productosFormateados = pedido.lista_productos
+      const productosFormateados = orderSelected.lista_productos
         .map((prod) => {
           const item = [
             {
               columns: [
-                { text: prod.nombre, fontSize: 10, width: "*", bold: true },
+                {
+                  text: prod.nombre,
+                  fontSize: 10,
+                  width: "*",
+                  bold: true,
+                },
                 {
                   text: `S/. ${prod.precio.toFixed(2)}`,
                   fontSize: 10,
@@ -647,36 +650,36 @@ const resetGanancias = async (sucursalId) => {
 
       const metodosPago = [];
 
-      if (pedido.pay_method_1) {
+      if (ammountPayed1) {
         metodosPago.push({
           columns: [
-            { text: pedido.pay_method_1, fontSize: 10 },
+            { text: "Efectivo:", fontSize: 10 },
             {
-              text: `S/. ${pedido.efectivo?.toFixed(2) || "0.00"}`,
+              text: `S/. ${parseFloat(ammountPayed1).toFixed(2)}`,
               fontSize: 10,
               alignment: "right",
             },
           ],
         });
       }
-      if (pedido.pay_method_2) {
+      if (ammountPayed2) {
         metodosPago.push({
           columns: [
-            { text: pedido.pay_method_2, fontSize: 10 },
+            { text: "Yape/Plin:", fontSize: 10 },
             {
-              text: `S/. ${pedido.yape?.toFixed(2) || "0.00"}`,
+              text: `S/. ${parseFloat(ammountPayed2).toFixed(2)}`,
               fontSize: 10,
               alignment: "right",
             },
           ],
         });
       }
-      if (pedido.pay_method_3) {
+      if (ammountPayed3) {
         metodosPago.push({
           columns: [
-            { text: pedido.pay_method_3, fontSize: 10 },
+            { text: "Tarjeta:", fontSize: 10 },
             {
-              text: `S/. ${pedido.tarjeta?.toFixed(2) || "0.00"}`,
+              text: `S/. ${parseFloat(ammountPayed3).toFixed(2)}`,
               fontSize: 10,
               alignment: "right",
             },
@@ -689,7 +692,7 @@ const resetGanancias = async (sucursalId) => {
         pageMargins: [10, 10, 10, 10],
         content: [
           {
-            text: `PEDIDO #${pedido.id}`,
+            text: `PEDIDO #${orderSelected.id}`,
             style: "header",
             alignment: "center",
             margin: [0, 0, 0, 5],
@@ -701,24 +704,28 @@ const resetGanancias = async (sucursalId) => {
             margin: [0, 0, 0, 2],
           },
           {
-            text: `Cliente: ${pedido.nombre}`,
+            text: `Cliente: ${orderSelected.nombre}`,
             fontSize: 10,
             alignment: "center",
             margin: [0, 0, 0, 10],
           },
 
-          { text: "Productos:", style: "subheader", margin: [0, 0, 0, 4] },
+          {
+            text: "Productos:",
+            style: "subheader",
+            margin: [0, 0, 0, 4],
+          },
           ...productosFormateados,
 
-          ...(pedido.delivery_precio
+          ...(orderSelected.delivery_precio
             ? [
                 {
                   columns: [
                     { text: "Delivery", fontSize: 10 },
                     {
-                      text: `S/. ${parseFloat(pedido.delivery_precio).toFixed(
-                        2
-                      )}`,
+                      text: `S/. ${parseFloat(
+                        orderSelected.delivery_precio
+                      ).toFixed(2)}`,
                       fontSize: 10,
                       alignment: "right",
                     },
@@ -736,7 +743,20 @@ const resetGanancias = async (sucursalId) => {
           ...metodosPago,
 
           {
-            text: `TOTAL: S/. ${pedido.total_precio.toFixed(2)}`,
+            text: `Vuelto: S/. ${(
+              totalPagado -
+              orderSelected.lista_productos?.reduce((a, b) => a + b.precio, 0) +
+              parseFloat(orderSelected.delivery_precio)
+            ).toFixed(2)}`,
+            fontSize: 10,
+            margin: [0, 10, 0, 0],
+          },
+
+          {
+            text: `TOTAL: S/. ${(
+              orderSelected.lista_productos?.reduce((a, b) => a + b.precio, 0) +
+              parseFloat(orderSelected.delivery_precio)
+            ).toFixed(2)}`,
             style: "total",
             alignment: "right",
             margin: [0, 10, 0, 0],
@@ -759,7 +779,62 @@ const resetGanancias = async (sucursalId) => {
     }
 
     generarTicketVenta(pedido);
+
+    guardarProductosVendidos(pedido)
   };
+
+  async function guardarProductosVendidos(pedido) {
+  const mesActual = new Date(pedido.fecha).toISOString().slice(0, 7); // ej. "2025-06"
+
+  for (const producto of pedido.lista_productos) {
+    const { nombre, precio } = producto;
+
+    const { data: existente, error: fetchError } = await supabase
+      .from("productos_vendidos")
+      .select("*")
+      .eq("producto_nombre", nombre)
+      .eq("mes", mesActual)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error("Error al buscar producto vendido:", fetchError);
+      continue;
+    }
+
+    if (existente) {
+      const nuevaCantidad = existente.cantidad_vendida + 1;
+      const nuevoTotal = existente.total_generado + precio;
+
+      const { error: updateError } = await supabase
+        .from("productos_vendidos")
+        .update({
+          cantidad_vendida: nuevaCantidad,
+          total_generado: nuevoTotal,
+        })
+        .eq("id", existente.id);
+
+      if (updateError) {
+        console.error("Error al actualizar producto vendido:", updateError);
+      }
+    } else {
+      const { error: insertError } = await supabase.from("productos_vendidos").insert([
+        {
+          producto_nombre: nombre,
+          cantidad_vendida: 1,
+          total_generado: precio,
+          mes: mesActual,
+        },
+      ]);
+
+      if (insertError) {
+        console.error("Error al insertar producto vendido:", insertError);
+      }
+    }
+  }
+}
+
+
+  // 
 
   const actualizarGanancia = async (
     nuevaGanancia,
@@ -818,8 +893,6 @@ const resetGanancias = async (sucursalId) => {
 
     saveOrder(pedido);
 
-    descontarInsumosPorProductos(pedido.lista_productos);
-
     setOrderType("Para llevar");
     setPaymentMenu(false);
     setOrderSummary(false);
@@ -835,24 +908,101 @@ const resetGanancias = async (sucursalId) => {
     setEWalletMethod(false);
     setCardMethod(false);
 
-    updateCaja(pedido.efectivo, pedido.yape, pedido.tarjeta);
+    const fecha = new Date();
+    const hora = fecha.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const cliente = pedido.nombre || "Cliente";
 
-    const move = {
-      fecha: pedido.fecha,
-      monto_pagado: pedido.efectivo + pedido.yape + pedido.tarjeta - vuelto,
-      numero_pedido: pedido.id,
-      tipo_pago: `Pago Pendiente #${pedido.id}`,
-      m_efectivo: pedido.efectivo > 0 ? "Efectivo" : null,
-      m_yape: pedido.yape > 0 ? "Yape/Plin" : null,
-      m_tarjeta: pedido.tarjeta > 0 ? "Tarjeta" : null,
-      q_efe: pedido.efectivo - vuelto,
-      q_yape: pedido.yape - vuelto,
-      q_tar: pedido.tarjeta,
-      ing_eg: true,
-      reason: "",
+    const productosFormateados = pedido.lista_productos.map((prod, index) => {
+      const detalles = [];
+
+      if (prod.vegetalesSeleccionados?.length) {
+        detalles.push({
+          text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
+          fontSize: 11,
+          margin: [0, 0, 0, 5],
+        });
+      }
+
+      if (prod.salsasSeleccionadas?.length) {
+        detalles.push({
+          text: `• Salsas: ${prod.salsasSeleccionadas.join(", ")}`,
+          fontSize: 11,
+          margin: [0, 0, 0, 5],
+        });
+      }
+
+      if (prod.extrasSeleccionados?.length) {
+        detalles.push({
+          text: `• Extras: ${prod.extrasSeleccionados.join(", ")}`,
+          fontSize: 11,
+          margin: [0, 0, 0, 5],
+        });
+      }
+
+      return {
+        stack: [
+          {
+            text: `${prod.nombre}`,
+            bold: true,
+            fontSize: 13,
+            margin: [0, 0, 0, 3],
+          },
+          ...detalles,
+        ],
+        margin: [0, 0, 0, 10],
+      };
+    });
+
+    const nota = pedido.notas
+      ? [
+          {
+            text: "NOTA:",
+            bold: true,
+            margin: [0, 20, 0, 5],
+            fontSize: 12,
+          },
+          {
+            text: pedido.notas,
+            fontSize: 12,
+          },
+        ]
+      : [];
+
+    const docDefinition = {
+      pageSize: {
+        width: 165, // 58 mm
+        height: "auto",
+      },
+      pageMargins: [10, 10, 10, 10],
+      content: [
+        {
+          text: `PEDIDO #${pedido.id}`,
+          alignment: "center",
+          fontSize: 18,
+          bold: true,
+          margin: [0, 0, 0, 10],
+        },
+        { text: `Hora: ${hora}`, fontSize: 10 },
+        {
+          text: `Cliente: ${cliente}`,
+          fontSize: 10,
+          margin: [0, 0, 0, 3],
+        },
+        {
+          text: `${pedido.tipo_pedido}`,
+          fontSize: 11,
+          bold: true,
+          margin: [0, 0, 0, 10],
+        },
+        ...productosFormateados,
+        ...nota,
+      ],
     };
 
-    guardarMovimiento(move);
+    pdfMake.createPdf(docDefinition).open();
   };
 
   //
@@ -871,26 +1021,42 @@ const resetGanancias = async (sucursalId) => {
   });
 
   function updateCaja(efe, yap, tarj) {
-    efe > 0 ? setEfectivo(efectivo + efe - vuelto) : null;
-    yap > 0 ? setYapePlin(yapePlin + yap - vuelto) : null;
-    tarj > 0 ? setTarjeta(tarjeta + tarj - vuelto) : null;
+    // Actualizar efectivo
+    if (efe > 0) {
+      const actual = Number(localStorage.getItem("efectivo")) || 0;
+      const nuevo = actual + Number(efe);
+      setEfectivo(nuevo);
+      localStorage.setItem("efectivo", JSON.stringify(nuevo));
+    }
+
+    // Actualizar Yape/Plin
+    if (yap > 0) {
+      const actual = Number(localStorage.getItem("yape/plin")) || 0;
+      const nuevo = actual + Number(yap);
+      setYapePlin(nuevo);
+      localStorage.setItem("yape/plin", JSON.stringify(nuevo));
+    }
+
+    // Actualizar tarjeta
+    if (tarj > 0) {
+      const actual = Number(localStorage.getItem("tarjeta")) || 0;
+      const nuevo = actual + Number(tarj);
+      setTarjeta(nuevo);
+      localStorage.setItem("tarjeta", JSON.stringify(nuevo));
+    }
   }
 
   //
 
-  const [movimientos, setMovimientos] = useState([]);
-
-  useEffect(() => {
-    const data = localStorage.getItem("movimientos");
-    if (data) {
-      setMovimientos(JSON.parse(data));
-    }
-  }, []);
-
   function guardarMovimiento(nuevoMovimiento) {
-    const updated = [...movimientos, nuevoMovimiento];
+    // Obtener la lista actual desde localStorage
+    const stored = localStorage.getItem("movimientos");
+    const listaActual = stored ? JSON.parse(stored) : [];
 
-    setMovimientos(updated);
+    // Agregar el nuevo movimiento
+    const updated = [...listaActual, nuevoMovimiento];
+
+    // Guardar en localStorage
     localStorage.setItem("movimientos", JSON.stringify(updated));
   }
 
@@ -1029,7 +1195,9 @@ const resetGanancias = async (sucursalId) => {
             Pedidos
           </button>
           <button
-            onClick={() => setSellWindow("Caja")}
+            onClick={() => {
+              setSellWindow("Caja");
+            }}
             className={`w-full border-3 ${
               sellWindow === "Caja"
                 ? "border-[#ffa600] bg-[#ffa600] text-white"
@@ -1275,13 +1443,9 @@ const resetGanancias = async (sucursalId) => {
 
         {/* product container */}
         <div className="relative">
-          <Pedidos window={sellWindow} orders={pedidos} />
+          <Pedidos window={sellWindow}/>
           <Caja
             window={sellWindow}
-            efectivo={efectivo}
-            yapeplin={yapePlin}
-            tarjeta={tarjeta}
-            movimientos={movimientos}
           />
 
           <div
@@ -1352,7 +1516,6 @@ const resetGanancias = async (sucursalId) => {
               </div>
             </div>
 
-
             <div
               className={`z-10 fixed ${
                 selectedProducts.length > 0
@@ -1388,7 +1551,11 @@ const resetGanancias = async (sucursalId) => {
           >
             <div className="w-full flex gap-[15px] items-center mb-4">
               <button onClick={togglePaymentMenu}>
-                <IconChevronLeft size={30} stroke={2} className="cursor-pointer" />
+                <IconChevronLeft
+                  size={30}
+                  stroke={2}
+                  className="cursor-pointer"
+                />
               </button>
               <h1 className="text-[28px]">Pago</h1>
             </div>
@@ -1720,7 +1887,7 @@ const resetGanancias = async (sucursalId) => {
               <div className="flex gap-[10px] justify-center w-full">
                 <button
                   onClick={togglePaymentMenu}
-                  className={`text-[23px] text-white w-full ${
+                  className={`text-[23px] text-white cursor-pointer w-full ${
                     selectedProducts.length > 0
                       ? "bg-[#ffa600]"
                       : "bg-[#e0e0e0] pointer-events-none"
@@ -1730,7 +1897,11 @@ const resetGanancias = async (sucursalId) => {
                 </button>
                 <button
                   onClick={handleOrderWithoutPay}
-                  className="hidden text-[20px] bg-[#ffa600] text-white font-bold rounded-[15px] py-3"
+                  className={`text-[23px] text-black border-3 border-[#ffa600] cursor-pointer w-full ${
+                    selectedProducts.length > 0
+                      ? "bg-[#fff]"
+                      : "bg-[#e0e0e0] pointer-events-none text-white border-[#fff]"
+                  } font-bold rounded-[15px] py-3 transition-all duration-200`}
                 >
                   Pago Pendiente
                 </button>

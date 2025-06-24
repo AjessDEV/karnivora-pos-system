@@ -7,10 +7,6 @@ import "pdfmake/build/vfs_fonts";
 
 export default function Caja({
   window,
-  efectivo,
-  yapeplin,
-  tarjeta,
-  movimientos,
 }) {
   const { userData, loading } = useUser();
 
@@ -79,17 +75,41 @@ export default function Caja({
     localStorage.setItem("inicio_caja", JSON.stringify(startingCash));
   }, [startingCash]);
 
-  useEffect(() => {
-    localStorage.setItem("efectivo", JSON.stringify(efectivo));
-  }, [efectivo]);
+  const [efectivo, setEfectivo] = useState(0);
+  const [yapePlin, setYapePlin] = useState(0);
+  const [tarjeta, setTarjeta] = useState(0);
 
   useEffect(() => {
-    localStorage.setItem("yape/plin", JSON.stringify(yapeplin));
-  }, [yapeplin]);
+    const storedEfectivo = localStorage.getItem("efectivo");
+    const storedYape = localStorage.getItem("yape/plin");
+    const storedTarjeta = localStorage.getItem("tarjeta");
+
+    setEfectivo(storedEfectivo ? JSON.parse(storedEfectivo) : 0);
+    setYapePlin(storedYape ? JSON.parse(storedYape) : 0);
+    setTarjeta(storedTarjeta ? JSON.parse(storedTarjeta) : 0);
+  }, [userData]);
+
+  const [movimientos, setMovimientos] = useState([])
 
   useEffect(() => {
-    localStorage.setItem("tarjeta", JSON.stringify(tarjeta));
-  }, [tarjeta]);
+    const movesData = localStorage.getItem("movimientos");
+
+    if (movesData) {
+      try {
+        const parsedArray = JSON.parse(movesData);
+
+        if (Array.isArray(parsedArray)) {
+          setMovimientos(parsedArray);
+        } else {
+          console.warn("no es array");
+        }
+      } catch (error) {
+        console.error("error al parsear los datos", error);
+      }
+    }
+
+    console.log('movimientos',movimientos)
+  }, [userData])
 
   function generarReporteVenta(userData) {
     const movimientos = JSON.parse(localStorage.getItem("movimientos") || "[]");
@@ -269,7 +289,7 @@ export default function Caja({
             Efectivo: <br /> <b>S/. {formatPrice(efectivo)}</b>
           </p>
           <p className="font-bold w-full md:text-[25px]">
-            Yape/Plin: <br /> <b>S/. {formatPrice(yapeplin)}</b>
+            Yape/Plin: <br /> <b>S/. {formatPrice(yapePlin)}</b>
           </p>
           <p className="font-bold w-full md:text-[25px]">
             Tarjeta: <br /> <b>S/. {formatPrice(tarjeta)}</b>
@@ -277,7 +297,7 @@ export default function Caja({
         </div>
         <p className="font-[900] w-full text-[30px] mt-2">Venta Total:</p>
         <p className="font-[900] w-full text-[40px] text-[#26ce6c]">
-          S/. {formatPrice(efectivo + yapeplin + tarjeta)}
+          S/. {formatPrice(efectivo + yapePlin + tarjeta)}
         </p>
 
         <button

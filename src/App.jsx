@@ -22,20 +22,11 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
-// * terminar el inicio de sesion (LISTO)
-// * mostrar u ocultar dependiendo del rol (LISTO)
-// * hacer el registro de usuarios (nombre, sucursal, rol, correo electronico y contraseña) (LISTO)
-// * cerrar sesion, mantener la sesion iniciada y proteger las rutas para que no se pueda acceder a ellas sin iniciar sesion
-// * redirigir a la pagina de inicio de sesion si no se ha iniciado sesion
-// * redirigir a la pagina de opciones si se intenta acceder a la pagina de inicio de sesion estando ya logueado
-// * funcion para registrar sucursales
-// * hacer las paginas para "CAMBIAR CONTRASEÑA" y "RECUPERAR CONTRASEÑA"
-// * funcion para Cambiar/Recuperar contraseña
-// * funcion para guardar las ganancias del dia en la base de datos
-// * mostrar las ganancias en "REGISTRO"
-// * generar los PDF correspondientes (ticket, comandas, reportes, etc...)
-// TODO: Adaptar el diseño de la app a tables y pc
-// TODO: hacer las paginas de "AYUDA Y SOPORTE"
+// * Priorizar items faltantes (amarillo falta pero no urgente, rojo falta con urgencia)
+// * Pedidos con pago pendiente y poder agregar mas productos (pedido abierto)
+// * Anulacion de pedido (eliminar pedido)
+// * Guardar por cada venta la cantidad que se vendio de cada producto.
+// TODO: Filtrar ganancias por sucursal y por fecha
 
 function App() {
   const location = useLocation();

@@ -13,7 +13,7 @@ export default function Login() {
 
     if (error) {
       console.error("Error al iniciar sesión", error.message);
-      setMessage("Error al iniciar sesión. Verifica que la contraseña y el correo son correctos.");
+      setMessage("Error al iniciar sesión. Verifica que la contraseña y el correo son correctos, o tu conexion a internet");
       return;
     }
 

@@ -14,7 +14,7 @@ export default function Registro() {
       console.error("Error al obtener las ganancias", error);
       return;
     } else {
-      console.log('ganancia actualizada', data)
+      console.log("ganancia actualizada", data);
       setGanancias(data);
     }
   };
@@ -43,29 +43,54 @@ export default function Registro() {
     fetchTotal();
   }, []);
 
-  const [ventasAnteriores, setVentasAnteriores] = useState([])
+  const [ventasAnteriores, setVentasAnteriores] = useState([]);
 
   const fetchVentasAnteriores = async () => {
-    const { data, error } = await supabase
-      .from('ventas_diarias')
-      .select('*')
+    const { data, error } = await supabase.from("ventas_diarias").select("*");
 
-    if(error) {
-      console.error('error al obtener las ventas anteriores:', error.message)
+    if (error) {
+      console.error("error al obtener las ventas anteriores:", error.message);
     } else {
-      console.log('ventas anteriores obtenidas:', data)
-      setVentasAnteriores(data)
+      console.log("ventas anteriores obtenidas:", data);
+      setVentasAnteriores(data);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchVentasAnteriores()
-  }, [])
+    fetchVentasAnteriores();
+  }, []);
 
-  if(loading && !userData) {
-    return (
-      <div></div>
-    )
+  const [productosVendidosPorMes, setProductosVendidosPorMes] = useState({});
+
+  useEffect(() => {
+    async function fetchProductosVendidos() {
+      const { data, error } = await supabase
+        .from("productos_vendidos")
+        .select("*")
+        .order("mes", { ascending: false });
+
+      if (error) {
+        console.error("Error al obtener productos vendidos:", error);
+        return;
+      }
+
+      // Agrupar por mes
+      const agrupado = data.reduce((acc, item) => {
+        if (!acc[item.mes]) acc[item.mes] = [];
+        acc[item.mes].push(item);
+        return acc;
+      }, {});
+
+      setProductosVendidosPorMes(agrupado);
+    }
+
+    fetchProductosVendidos();
+  }, []);
+
+  //
+
+  if (loading && !userData) {
+    return <div></div>;
   }
 
   if (userData.rol !== "administrador") {
@@ -86,7 +111,9 @@ export default function Registro() {
       <>
         <div className="size-full flex flex-col itmes-center p-4 md:pl-[300px] pb-[200px]">
           <div className="w-full h-[180px] flex flex-col items-center justify-center rounded-[35px] p-3 bg-gradient-to-t from-[#ffc600] to-[#ffa600] md:items-start md:justify-start md:p-5">
-            <p className="text-white font-bold text-[20px] md:text-[30px]">Ingreso Total:</p>
+            <p className="text-white font-bold text-[20px] md:text-[30px]">
+              Ingreso Total:
+            </p>
             <p className="text-white font-[900] text-[50px] -mt-2 truncate md:text-[70px]">
               S/. {gananciaTotal.toFixed(2)}
             </p>
@@ -116,19 +143,103 @@ export default function Registro() {
 
           <br />
 
-          <p className="text-[20px] text-[#707070] font-bold mb-2">Ventas Anteriores</p>
+          <p className="text-[20px] text-[#707070] font-bold mb-2">
+            Ventas Anteriores
+          </p>
           <div className="flex flex-col gap-5 md:max-w-[700px]">
-            {ventasAnteriores.slice().reverse().map((venta) => {
-              return (
-                <div key={venta.id} className="flex justify-between items-center">
-                  <div className="flex flex-col">
-                    <p className="font-bold text-[20px]">{venta.sucursal_name}</p>
-                    <p className="font-bold text-[#707070]">{venta.fecha.slice(0, 10)}</p>
+            {ventasAnteriores
+              .slice()
+              .reverse()
+              .map((venta) => {
+                return (
+                  <div
+                    key={venta.id}
+                    className="flex justify-between items-center"
+                  >
+                    <div className="flex flex-col">
+                      <p className="font-bold text-[20px]">
+                        {venta.sucursal_name}
+                      </p>
+                      <p className="font-bold text-[#707070]">
+                        {venta.fecha.slice(0, 10)}
+                      </p>
+                    </div>
+                    <p className="font-black text-[20px] text-[#26ce6c]">
+                      + S/. {venta.total_ganancia.toFixed(2)}
+                    </p>
                   </div>
-                  <p className="font-black text-[20px] text-[#26ce6c]">+ S/. {venta.total_ganancia.toFixed(2)}</p>
-                </div>
-              )
-            })}
+                );
+              })}
+          </div>
+          <br /><br />
+          <div>
+            <p className="text-[20px] text-[#707070] font-bold mb-2">Lista de Productos Vendidos</p>
+            <br />
+            <div className="flex flex-col gap-8">
+              {Object.entries(productosVendidosPorMes).map(
+                ([mes, productos], i) => {
+                  // Convertir el mes a nombre legible
+                  const nombreMes = new Date(mes + "-01").toLocaleDateString(
+                    "es-PE",
+                    {
+                      month: "long",
+                      year: "numeric",
+                    }
+                  );
+
+                  // Ordenar por total generado
+                  const productosOrdenados = [...productos].sort(
+                    (a, b) => b.total_generado - a.total_generado
+                  );
+
+                  // Total mensual
+                  const totalMes = productosOrdenados.reduce(
+                    (sum, prod) => sum + prod.total_generado,
+                    0
+                  );
+
+                  return (
+                    <div key={mes} className="md:max-w-[700px]">
+                      <h2 className="text-2xl font-bold mb-4 capitalize">
+                        {i === 0 ? "Mes Actual - " : ""}
+                        {nombreMes}
+                      </h2>
+
+                      <div className="flex flex-col gap-2">
+                        {productosOrdenados.map((prod, index) => (
+                          <div
+                            key={prod.id}
+                            className="flex justify-between items-center border-b border-[#00000020] py-2 text-[18px]"
+                          >
+                            <div className="flex items-center gap-2">
+                              {index === 0 && "🥇"}
+                              {index === 1 && "🥈"}
+                              {index === 2 && "🥉"}
+                              <span className="font-bold">
+                                {prod.producto_nombre}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold">{prod.cantidad_vendida} unidades</p>
+                              <p className="font-black text-[25px] text-[#ffa600]">
+                                S/. {prod.total_generado.toFixed(2)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="text-right mt-4 font-bold text-[20px] uppercase flex justify-between items-center">
+                        Total del mes:{" "}
+                        <span className="text-[#26ce6c] font-black text-[35px]">
+                          S/. {totalMes.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
           </div>
         </div>
       </>
