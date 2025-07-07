@@ -210,6 +210,7 @@ export default function Ventas() {
 
     if (productoError) {
       console.error("error al crear producto", productoError);
+      alert(productoError);
       return;
     }
 
@@ -229,6 +230,7 @@ export default function Ventas() {
           "error al conectar producto al inventario",
           relacionError
         );
+        alert(relacionError);
       }
     }
 
