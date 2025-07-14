@@ -69,17 +69,18 @@ export default function SingUp() {
       return;
     } else {
       // Aquí puedes guardar el usuario en la base de datos
+
       const { data: userData, error: userError } = await supabase
-        .from("perfiles")
-        .insert([
-          {
-            user_nombre: username,
-            sucursal_id: sucursalId === null ? null : sucursalId && rol === 'Administrador' ? null : null,
-            sucursal_nombre: sucursal !== 'Seleccionar Sucursal' ? sucursal : null && rol === 'Administrador' ? null : null,
-            rol: rol,
-            id: data.user.id, // ID del usuario registrado
-          },
-        ]);
+  .from("perfiles")
+  .insert([
+    {
+      user_nombre: username,
+      sucursal_id: rol !== 'Administrador' ? sucursalId : null,
+      sucursal_nombre: rol !== 'Administrador' ? sucursal : null,
+      rol: rol,
+      id: data.user.id,
+    },
+  ]);
 
       if (userError) {
         console.error("Error al guardar el usuario en la base de datos:", userError);
