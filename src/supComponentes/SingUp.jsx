@@ -200,7 +200,7 @@ export default function SingUp() {
     password !== "" &&
     confirmPassword !== ""
       ? 'bg-[#ffa600] text-white'
-      : 'bg-gray-500 text-[#707070] pointer-events-none'
+      : 'bg-[#e0e0e0] text-[#707070] pointer-events-none'
   } text-[20px] rounded-[10px] transition-all ease-in-out duration-200`}
 >
   Registrar
