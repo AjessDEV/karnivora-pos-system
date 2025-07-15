@@ -218,7 +218,7 @@ export default function Inventario() {
     return <div></div>;
   } else {
     return (
-      <div className="size-full p-[15px_20px] md:pl-[300px]">
+      <div className="size-full p-[15px_20px] pb-[100px] md:pl-[300px]">
         <h1 className="text-[40px] font-bold text-center mb-[10px]">
           Inventario
         </h1>
