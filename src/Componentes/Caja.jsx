@@ -222,7 +222,7 @@ export default function Caja({
       },
     };
 
-    pdfMake.createPdf(docDefinition).open();
+    pdfMake.createPdf(docDefinition).print();
   }
 
   return (
