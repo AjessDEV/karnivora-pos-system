@@ -551,7 +551,7 @@ export default function Inventario() {
                     onClick={() => setUnit("Pcs.")}
                     className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
                   >
-                    porciones (pcs)
+                    Porciones (pcs)
                   </li>
                   <li
                     onClick={() => setUnit("Pq.")}
@@ -582,6 +582,12 @@ export default function Inventario() {
                     className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
                   >
                     Bolsas (Bol.)
+                  </li>
+                  <li
+                    onClick={() => setUnit("Bld.")}
+                    className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
+                  >
+                    Baldes (Bld.)
                   </li>
                 </ul>
               </div>
