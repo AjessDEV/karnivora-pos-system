@@ -218,7 +218,7 @@ export default function Inventario() {
     return <div></div>;
   } else {
     return (
-      <div className="size-full p-[15px_20px] pb-[100px] md:pl-[300px]">
+      <div className="size-full p-[15px_20px] pb-[150px] md:pl-[300px]">
         <h1 className="text-[40px] font-bold text-center mb-[10px]">
           Inventario
         </h1>
@@ -323,6 +323,21 @@ export default function Inventario() {
                     >
                       Envases
                     </li>
+
+                    <li
+                      onClick={() => setType("Gaseosas")}
+                      className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
+                    >
+                      Gaseosas
+                    </li>
+
+                    <li
+                      onClick={() => setType("Salsas")}
+                      className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
+                    >
+                      Salsas
+                    </li>
+                    
                     <li
                       onClick={() => setType("Papelería")}
                       className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
@@ -468,6 +483,21 @@ export default function Inventario() {
                   >
                     Envases
                   </li>
+
+                  <li
+                    onClick={() => setTypeAdd("Gaseosas")}
+                    className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
+                  >
+                    Gaseosas
+                  </li>
+
+                  <li
+                    onClick={() => setTypeAdd("Salsas")}
+                    className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
+                  >
+                    Salsas
+                  </li>
+                  
                   <li
                     onClick={() => setTypeAdd("Papelería")}
                     className="p-[5px_10px] hover:bg-[#ffa60010] rounded-[8px] transition-all ease-in-out duration-200"
