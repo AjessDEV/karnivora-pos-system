@@ -305,13 +305,6 @@ export default function Caja({
         Imprimir Reporte
       </button>
 
-      <button
-        onClick={() => saveGanancias()}
-        className="font-bold text-[16px] px-3 py-2 bg-[#ff3333] text-white rounded-full fixed bottom-[200px] right-4 md:bottom-22 md:text-[16px] cursor-pointer border-3 border-[#ff3333] hover:bg-white hover:text-[#ff3333] transition-all duration-200"
-      >
-        Cerrar Turno
-      </button>
-
       <h2 className="font-bold text-[28px] text-center mb-[30px]">
         Caja Registradora
       </h2>
@@ -570,6 +563,13 @@ export default function Caja({
               })}
           </div>
         </div>
+
+        <button
+        onClick={() => saveGanancias()}
+        className="font-bold text-[16px] px-3 py-2 bg-[#ff3333] text-white rounded-full bottom-[200px] right-4 md:bottom-22 md:text-[16px] cursor-pointer border-3 border-[#ff3333] hover:bg-white hover:text-[#ff3333] transition-all duration-200"
+      >
+        Cerrar Turno
+      </button>
       </div>
     </div>
   );
