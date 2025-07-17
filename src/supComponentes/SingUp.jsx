@@ -102,7 +102,7 @@ export default function SingUp() {
     }
   }
 
-  const dominiosPermitidos = ["@gmail.com", "@hotmail.com", "@outlook.com"];
+  const dominiosPermitidos = ["@gmail.com", "@hotmail.com", "@outlook.com", "@protonmail.com"];
 
   return (
     <>
