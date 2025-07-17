@@ -1,6 +1,7 @@
 import { IconEdit } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 import { useUser } from "../supComponentes/UserContext";
+import { supabase } from "../../supabaseClient";
 
 import pdfMake from "pdfmake/build/pdfmake";
 import "pdfmake/build/vfs_fonts";
@@ -225,6 +226,70 @@ export default function Caja({
     pdfMake.createPdf(docDefinition).print();
   }
 
+  async function saveGanancias() {
+    const today = new Date().toLocaleDateString("en-CA");
+      const lastLoginDate = localStorage.getItem("lastLoginDate");
+
+      if (lastLoginDate && lastLoginDate !== today) {
+        const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
+        const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
+        const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
+        const total = efectivo + yapePlin + tarjeta;
+
+        await guardarVentasAntriores({
+          fecha: lastLoginDate,
+          sucursal_id: userData.sucursal_id,
+          total,
+          sucursal_nombre: userData.sucursal_nombre,
+        });
+
+        localStorage.setItem("efectivo", "0");
+        localStorage.setItem("yape/plin", "0");
+        localStorage.setItem("tarjeta", "0");
+        localStorage.setItem("pedidos", JSON.stringify([]));
+        localStorage.setItem("movimientos", JSON.stringify([]));
+        localStorage.setItem("gastos", JSON.stringify([]));
+        const sucId = userData?.sucursal_id;
+
+        await resetGanancias(sucId);
+      }
+
+      localStorage.setItem("lastLoginDate", today);
+  }
+
+
+      const resetGanancias = async (sucursalId) => {
+        const { error } = await supabase
+          .from("ganancias")
+          .update({ total_ganancia: 0 })
+          .eq("sucursal_id", sucursalId);
+    
+        if (error) {
+          console.error("error al resetear ganancias", error.message);
+        }
+      };
+    
+      async function guardarVentasAntriores({
+        fecha,
+        sucursal_id,
+        total,
+        sucursal_nombre,
+      }) {
+        const { error } = await supabase.from("ventas_diarias").insert({
+          fecha,
+          sucursal_id,
+          total_ganancia: total,
+          sucursal_name: sucursal_nombre,
+        });
+    
+        if (error) {
+          console.error("Error al Guardar Ventas", error.message);
+        } else {
+          console.log("ventas anteriores guardadas correctamente");
+          alert("ventas anteriores guardadas correctamente");
+        }
+      }
+
   return (
     <div
       className={`w-full absolute ${
@@ -238,6 +303,13 @@ export default function Caja({
         className="font-bold text-[20px] px-3 py-2 bg-[#26ce6c] text-white rounded-full fixed bottom-[120px] right-4 md:bottom-4 md:text-[25px] cursor-pointer border-3 border-[#26ce6c] hover:bg-white hover:text-[#26ce6c] transition-all duration-200"
       >
         Imprimir Reporte
+      </button>
+
+      <button
+        onClick={() => saveGanancias()}
+        className="font-bold text-[16px] px-3 py-2 bg-[#ff3333] text-white rounded-full fixed bottom-[200px] right-4 md:bottom-22 md:text-[16px] cursor-pointer border-3 border-[#ff3333] hover:bg-white hover:text-[#ff3333] transition-all duration-200"
+      >
+        Cerrar Turno
       </button>
 
       <h2 className="font-bold text-[28px] text-center mb-[30px]">

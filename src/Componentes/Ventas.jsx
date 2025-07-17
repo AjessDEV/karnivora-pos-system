@@ -18,75 +18,6 @@ import { useUser } from "../supComponentes/UserContext";
 export default function Ventas() {
   const { userData, loading } = useUser();
 
-  useEffect(() => {
-    const run = async () => {
-      if (!userData?.sucursal_id || !userData?.sucursal_nombre) return;
-
-      const today = new Date().toLocaleDateString("en-CA");
-      const lastLoginDate = localStorage.getItem("lastLoginDate");
-
-      if (lastLoginDate && lastLoginDate !== today) {
-        const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
-        const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
-        const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
-        const total = efectivo + yapePlin + tarjeta;
-
-        await guardarVentasAntriores({
-          fecha: lastLoginDate,
-          sucursal_id: userData.sucursal_id,
-          total,
-          sucursal_nombre: userData.sucursal_nombre,
-        });
-
-        localStorage.setItem("efectivo", "0");
-        localStorage.setItem("yape/plin", "0");
-        localStorage.setItem("tarjeta", "0");
-        localStorage.setItem("pedidos", JSON.stringify([]));
-        localStorage.setItem("movimientos", JSON.stringify([]));
-        localStorage.setItem("gastos", JSON.stringify([]));
-        const sucId = userData?.sucursal_id;
-
-        await resetGanancias(sucId);
-      }
-
-      localStorage.setItem("lastLoginDate", today);
-    };
-
-    run();
-  }, [userData]);
-
-  const resetGanancias = async (sucursalId) => {
-    const { error } = await supabase
-      .from("ganancias")
-      .update({ total_ganancia: 0 })
-      .eq("sucursal_id", sucursalId);
-
-    if (error) {
-      console.error("error al resetear ganancias", error.message);
-    }
-  };
-
-  async function guardarVentasAntriores({
-    fecha,
-    sucursal_id,
-    total,
-    sucursal_nombre,
-  }) {
-    const { error } = await supabase.from("ventas_diarias").insert({
-      fecha,
-      sucursal_id,
-      total_ganancia: total,
-      sucursal_name: sucursal_nombre,
-    });
-
-    if (error) {
-      console.error("Error al Guardar Ventas", error.message);
-    } else {
-      console.log("ventas anteriores guardadas correctamente");
-      alert("ventas anteriores guardadas correctamente");
-    }
-  }
-
   const [currencyMenu, setCurrencyMenu] = useState(false);
   const toggleCurrencyMenu = () => {
     setCurrencyMenu((prev) => !prev);
@@ -786,54 +717,59 @@ export default function Ventas() {
   };
 
   async function guardarProductosVendidos(pedido) {
-  const mesActual = new Date(pedido.fecha).toISOString().slice(0, 7); // ej. "2025-06"
-
-  for (const producto of pedido.lista_productos) {
-    const { nombre, precio } = producto;
-
-    const { data: existente, error: fetchError } = await supabase
-      .from("productos_vendidos")
-      .select("*")
-      .eq("producto_nombre", nombre)
-      .eq("mes", mesActual)
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("Error al buscar producto vendido:", fetchError);
-      continue;
-    }
-
-    if (existente) {
-      const nuevaCantidad = existente.cantidad_vendida + 1;
-      const nuevoTotal = existente.total_generado + precio;
-
-      const { error: updateError } = await supabase
+    const mesActual = new Date(pedido.fecha).toISOString().slice(0, 7);
+    const sucursalId = userData.sucursal_id;
+  
+    for (const producto of pedido.lista_productos) {
+      const { nombre, precio } = producto;
+  
+      const { data: existente, error: fetchError } = await supabase
         .from("productos_vendidos")
-        .update({
-          cantidad_vendida: nuevaCantidad,
-          total_generado: nuevoTotal,
-        })
-        .eq("id", existente.id);
-
-      if (updateError) {
-        console.error("Error al actualizar producto vendido:", updateError);
+        .select("*")
+        .eq("producto_nombre", nombre)
+        .eq("mes", mesActual)
+        .eq("sucursal_id", sucursalId) // <-- filtro por sucursal
+        .maybeSingle();
+  
+      if (fetchError) {
+        console.error("Error al buscar producto vendido:", fetchError);
+        continue;
       }
-    } else {
-      const { error: insertError } = await supabase.from("productos_vendidos").insert([
-        {
-          producto_nombre: nombre,
-          cantidad_vendida: 1,
-          total_generado: precio,
-          mes: mesActual,
-        },
-      ]);
-
-      if (insertError) {
-        console.error("Error al insertar producto vendido:", insertError);
+  
+      if (existente) {
+        const nuevaCantidad = existente.cantidad_vendida + 1;
+        const nuevoTotal = existente.total_generado + precio;
+  
+        const { error: updateError } = await supabase
+          .from("productos_vendidos")
+          .update({
+            cantidad_vendida: nuevaCantidad,
+            total_generado: nuevoTotal,
+          })
+          .eq("id", existente.id);
+  
+        if (updateError) {
+          console.error("Error al actualizar producto vendido:", updateError);
+        }
+      } else {
+        const { error: insertError } = await supabase.from("productos_vendidos").insert([
+          {
+            producto_nombre: nombre,
+            cantidad_vendida: 1,
+            total_generado: precio,
+            mes: mesActual,
+            sucursal_id: sucursalId, // <-- se guarda con la sucursal
+            sucursal_nombre: userData.sucursal_nombre,
+          },
+        ]);
+  
+        if (insertError) {
+          console.error("Error al insertar producto vendido:", insertError);
+        }
       }
     }
   }
-}
+  
 
 
   // 

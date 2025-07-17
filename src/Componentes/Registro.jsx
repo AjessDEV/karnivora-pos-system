@@ -93,7 +93,7 @@ export default function Registro() {
     return <div></div>;
   }
 
-  if (userData.rol !== "administrador") {
+  if (userData.rol !== "Administrador") {
     return (
       <div className="h-screen flex flex-col items-center justify-center px-3 md:pl-[300px]">
         <p className="text-[30px] font-bold text-[#707070]">
@@ -171,14 +171,16 @@ export default function Registro() {
                 );
               })}
           </div>
-          <br /><br />
+          <br />
+          <br />
           <div>
-            <p className="text-[20px] text-[#707070] font-bold mb-2">Lista de Productos Vendidos</p>
+            <p className="text-[20px] text-[#707070] font-bold mb-2">
+              Lista de Productos Vendidos
+            </p>
             <br />
             <div className="flex flex-col gap-8">
               {Object.entries(productosVendidosPorMes).map(
                 ([mes, productos], i) => {
-                  // Convertir el mes a nombre legible
                   const nombreMes = new Date(mes + "-01").toLocaleDateString(
                     "es-PE",
                     {
@@ -187,53 +189,82 @@ export default function Registro() {
                     }
                   );
 
-                  // Ordenar por total generado
-                  const productosOrdenados = [...productos].sort(
-                    (a, b) => b.total_generado - a.total_generado
-                  );
-
-                  // Total mensual
-                  const totalMes = productosOrdenados.reduce(
-                    (sum, prod) => sum + prod.total_generado,
-                    0
-                  );
+                  // Agrupar productos por sucursal_id
+                  const productosPorSucursal = {};
+                  for (const prod of productos) {
+                    if (!productosPorSucursal[prod.sucursal_id]) {
+                      productosPorSucursal[prod.sucursal_id] = {
+                        nombre: prod.sucursal_nombre || "Sucursal desconocida",
+                        productos: [],
+                      };
+                    }
+                    productosPorSucursal[prod.sucursal_id].productos.push(prod);
+                  }
 
                   return (
-                    <div key={mes} className="md:max-w-[700px]">
+                    <div key={mes}>
                       <h2 className="text-2xl font-bold mb-4 capitalize">
                         {i === 0 ? "Mes Actual - " : ""}
                         {nombreMes}
                       </h2>
 
-                      <div className="flex flex-col gap-2">
-                        {productosOrdenados.map((prod, index) => (
-                          <div
-                            key={prod.id}
-                            className="flex justify-between items-center border-b border-[#00000020] py-2 text-[18px]"
-                          >
-                            <div className="flex items-center gap-2">
-                              {index === 0 && "🥇"}
-                              {index === 1 && "🥈"}
-                              {index === 2 && "🥉"}
-                              <span className="font-bold">
-                                {prod.producto_nombre}
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-bold">{prod.cantidad_vendida} unidades</p>
-                              <p className="font-black text-[25px] text-[#ffa600]">
-                                S/. {prod.total_generado.toFixed(2)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Object.entries(productosPorSucursal).map(
+                          ([sucursalId, { nombre, productos }]) => {
+                            const productosOrdenados = [...productos].sort(
+                              (a, b) => b.total_generado - a.total_generado
+                            );
 
-                      <div className="text-right mt-4 font-bold text-[20px] uppercase flex justify-between items-center">
-                        Total del mes:{" "}
-                        <span className="text-[#26ce6c] font-black text-[35px]">
-                          S/. {totalMes.toFixed(2)}
-                        </span>
+                            const totalSucursal = productosOrdenados.reduce(
+                              (sum, p) => sum + p.total_generado,
+                              0
+                            );
+
+                            return (
+                              <div
+                                key={sucursalId}
+                                className="rounded-[10px] py-4 px-6 shadow-[0_0_20px_#00000030] relative max-h-[250px] overflow-y-auto"
+                              >
+                                <div className="absolute top-2 left-3 text-sm font-bold bg-gray-200 px-2 py-1 rounded">
+                                  {nombre}
+                                </div>
+
+                                <div className="flex flex-col gap-2 mt-6">
+                                  {productosOrdenados.map((prod, index) => (
+                                    <div
+                                      key={prod.id}
+                                      className="flex justify-between items-center border-b border-[#00000020] py-1 text-[15px]"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        {index === 0 && "🥇"}
+                                        {index === 1 && "🥈"}
+                                        {index === 2 && "🥉"}
+                                        <span className="font-bold">
+                                          {prod.producto_nombre}
+                                        </span>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="font-bold">
+                                          {prod.cantidad_vendida} Unid.
+                                        </p>
+                                        <p className="text-[#ffa600] font-black text-[18px]">
+                                          S/. {prod.total_generado.toFixed(2)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="text-right mt-2 font-bold text-[16px]">
+                                  Total sucursal:
+                                  <span className="text-[#26ce6c] font-black text-[22px] block">
+                                    S/. {totalSucursal.toFixed(2)}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          }
+                        )}
                       </div>
                     </div>
                   );

@@ -403,27 +403,29 @@ export default function Pedidos({ window }) {
   };
 
   async function guardarProductosVendidos(pedido) {
-    const mesActual = new Date(pedido.fecha).toISOString().slice(0, 7); // ej. "2025-06"
-
+    const mesActual = new Date(pedido.fecha).toISOString().slice(0, 7);
+    const sucursalId = userData.sucursal_id;
+  
     for (const producto of pedido.lista_productos) {
       const { nombre, precio } = producto;
-
+  
       const { data: existente, error: fetchError } = await supabase
         .from("productos_vendidos")
         .select("*")
         .eq("producto_nombre", nombre)
         .eq("mes", mesActual)
+        .eq("sucursal_id", sucursalId) // <-- filtro por sucursal
         .maybeSingle();
-
+  
       if (fetchError) {
         console.error("Error al buscar producto vendido:", fetchError);
         continue;
       }
-
+  
       if (existente) {
         const nuevaCantidad = existente.cantidad_vendida + 1;
         const nuevoTotal = existente.total_generado + precio;
-
+  
         const { error: updateError } = await supabase
           .from("productos_vendidos")
           .update({
@@ -431,22 +433,22 @@ export default function Pedidos({ window }) {
             total_generado: nuevoTotal,
           })
           .eq("id", existente.id);
-
+  
         if (updateError) {
           console.error("Error al actualizar producto vendido:", updateError);
         }
       } else {
-        const { error: insertError } = await supabase
-          .from("productos_vendidos")
-          .insert([
-            {
-              producto_nombre: nombre,
-              cantidad_vendida: 1,
-              total_generado: precio,
-              mes: mesActual,
-            },
-          ]);
-
+        const { error: insertError } = await supabase.from("productos_vendidos").insert([
+          {
+            producto_nombre: nombre,
+            cantidad_vendida: 1,
+            total_generado: precio,
+            mes: mesActual,
+            sucursal_id: sucursalId, // <-- se guarda con la sucursal
+            sucursal_nombre: userData.sucursal_nombre,
+          },
+        ]);
+  
         if (insertError) {
           console.error("Error al insertar producto vendido:", insertError);
         }
