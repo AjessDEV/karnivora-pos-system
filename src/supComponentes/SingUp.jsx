@@ -194,7 +194,6 @@ export default function SingUp() {
   className={`font-bold w-full py-4 ${
     username !== "" &&
     email !== "" &&
-    sucursal !== "Seleccionar Sucursal" &&
     rol !== "Seleccionar Rol" &&
     dominiosPermitidos.some(d => email.endsWith(d)) &&
     password !== "" &&
