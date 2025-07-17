@@ -228,9 +228,7 @@ export default function Caja({
 
   async function saveGanancias() {
     const today = new Date().toLocaleDateString("en-CA");
-      const lastLoginDate = localStorage.getItem("lastLoginDate");
-
-      if (lastLoginDate && lastLoginDate !== today) {
+      const lastLoginDate = localStorage.getItem("lastLoginDate")
         const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
         const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
         const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
@@ -252,7 +250,7 @@ export default function Caja({
         const sucId = userData?.sucursal_id;
 
         await resetGanancias(sucId);
-      }
+      
 
       localStorage.setItem("lastLoginDate", today);
   }
