@@ -809,7 +809,7 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
   const handleOrderWithoutPay = () => {
     const pedido = {
-      id: idUnico,
+      id: nuevoId,
       nombre: clientName !== "" ? clientName : "Sin Nombre",
       fecha: new Date().toISOString(),
       total_precio: totalConDelivery,
