@@ -726,7 +726,7 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
     await guardarProductosVendidos(pedido)
   };
 
-  async function guardarProductosVendidos(pedido) {
+  async function guardarProductosVendidos(pedido, userDat) {
   const productosAGuardar = [...pedido.lista_productos];
 
   // Si hay delivery, lo añadimos como producto
@@ -734,7 +734,6 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
     productosAGuardar.push({
       nombre: "Delivery",
       cantidad: 1,
-      categoria: "Servicio",
       id_producto: null, // Puedes usar null o un ID especial
       precio: pedido.delivery_precio,
     });
@@ -742,8 +741,8 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
   const fecha = pedido.fecha;
   const mes = fecha.slice(0, 7); // "YYYY-MM"
-  const sucursal_id = userData.sucursal_id;
-  const sucursal_nombre = userData.sucursal_nombre;
+  const sucursal_id = userDat.sucursal_id;
+  const sucursal_nombre = userDat.sucursal_nombre;
 
   for (const producto of productosAGuardar) {
     const { nombre, cantidad, categoria, id_producto, precio } = producto;
@@ -751,7 +750,6 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
     const { error } = await supabase.from("productos_vendidos").insert({
       nombre,
       cantidad,
-      categoria,
       id_producto,
       precio,
       fecha,
