@@ -467,12 +467,24 @@ export default function Ventas() {
 };
 
 
-  const numeroRandom = Math.floor(Math.random() * 1000);
-  const idUnico = numeroRandom.toString().padStart(3, "0");
+  // Obtén la lista de pedidos desde localStorage
+const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+
+// Encuentra el mayor ID actual
+let maxId = 0;
+pedidos.forEach(pedido => {
+  const idNum = parseInt(pedido.id); // convierte "001" -> 1
+  if (idNum > maxId) {
+    maxId = idNum;
+  }
+});
+
+// Genera el siguiente ID incremental
+const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
   const handleOrder = () => {
     const pedido = {
-      id: idUnico,
+      id: nuevoId,
       nombre: clientName !== "" ? clientName : "Sin Nombre",
       fecha: new Date().toISOString(),
       total_precio: totalConDelivery,
