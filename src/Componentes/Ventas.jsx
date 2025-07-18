@@ -482,7 +482,7 @@ pedidos.forEach(pedido => {
 // Genera el siguiente ID incremental
 const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
     const pedido = {
       id: nuevoId,
       nombre: clientName !== "" ? clientName : "Sin Nombre",
@@ -723,7 +723,7 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
     generarTicketVenta(pedido);
 
-    guardarProductosVendidos(pedido)
+    await guardarProductosVendidos(pedido)
   };
 
   async function guardarProductosVendidos(pedido) {
