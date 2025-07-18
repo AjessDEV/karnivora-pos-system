@@ -858,17 +858,7 @@ export default function Pedidos({ window }) {
                         parseFloat(orderSelected.delivery_precio)
                     );
 
-                    const venta = parseFloat(
-                      ammountPayed1 +
-                        ammountPayed2 +
-                        ammountPayed3 -
-                        (totalPagado -
-                          orderSelected.lista_productos?.reduce(
-                            (a, b) => a + b.precio,
-                            0
-                          ) +
-                          parseFloat(orderSelected.delivery_precio))
-                    );
+                    const venta = parseFloat(orderSelected.total_precio);
                     const sucursalId = userData.sucursal_id;
                     const sucursalNombre = userData.sucursal_nombre;
 
