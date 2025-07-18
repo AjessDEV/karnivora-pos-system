@@ -540,7 +540,7 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
     guardarMovimiento(move);
 
-    const gananciaVenta = parseFloat(pedido.total_precio);
+    const gananciaVenta = parseFloat(totalConDelivery);
     const sucursalId = userData.sucursal_id;
     const sucursalNombre = userData.sucursal_nombre;
 
