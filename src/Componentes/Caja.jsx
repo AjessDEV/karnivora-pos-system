@@ -228,14 +228,13 @@ export default function Caja({
 
   async function saveGanancias() {
     const today = new Date().toLocaleDateString("en-CA");
-      const lastLoginDate = localStorage.getItem("lastLoginDate")
         const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
         const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
         const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
         const total = efectivo + yapePlin + tarjeta;
 
         await guardarVentasAntriores({
-          fecha: lastLoginDate,
+          fecha: today,
           sucursal_id: userData.sucursal_id,
           total,
           sucursal_nombre: userData.sucursal_nombre,

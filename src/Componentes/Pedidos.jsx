@@ -402,59 +402,74 @@ export default function Pedidos({ window }) {
     setTarjeta(storedTarjeta ? JSON.parse(storedTarjeta) : 0);
   };
 
-  async function guardarProductosVendidos(pedido) {
-    const mesActual = new Date(pedido.fecha).toISOString().slice(0, 7);
-    const sucursalId = userData.sucursal_id;
-  
-    for (const producto of pedido.lista_productos) {
-      const { nombre, precio } = producto;
-  
-      const { data: existente, error: fetchError } = await supabase
+  async function guardarProductosVendidos(pedido, userDat) {
+  const productosAGuardar = [...pedido.lista_productos];
+
+  // Añadir delivery como producto si aplica
+  if (pedido.delivery_precio && pedido.delivery_precio > 0) {
+    productosAGuardar.push({
+      nombre: "Delivery",
+      cantidad: 1,
+      precio: parseFloat(pedido.delivery_precio),
+    });
+  }
+
+  const fecha = pedido.fecha;
+  const mes = fecha.slice(0, 7);
+  const sucursal_id = userDat.sucursal_id;
+  const sucursal_nombre = userDat.sucursal_nombre;
+
+  for (const producto of productosAGuardar) {
+    const { nombre, cantidad, id_producto, precio } = producto;
+
+    // Buscar si ya existe un registro de este producto vendido
+    const { data: existente, error: errorBusqueda } = await supabase
+      .from("productos_vendidos")
+      .select("*")
+      .eq("producto_nombre", nombre)
+      .eq("mes", mes)
+      .eq("sucursal_id", sucursal_id)
+      .single();
+
+    if (errorBusqueda && errorBusqueda.code !== "PGRST116") {
+      console.error("Error buscando producto vendido:", errorBusqueda.message);
+      continue;
+    }
+
+    if (existente) {
+      // Ya existe: actualizamos cantidad y total generado
+      const nuevaCantidad = existente.cantidad_vendida + cantidad;
+      const nuevoTotal = existente.total_generado + precio;
+
+      const { error: errorUpdate } = await supabase
         .from("productos_vendidos")
-        .select("*")
-        .eq("producto_nombre", nombre)
-        .eq("mes", mesActual)
-        .eq("sucursal_id", sucursalId) // <-- filtro por sucursal
-        .maybeSingle();
-  
-      if (fetchError) {
-        console.error("Error al buscar producto vendido:", fetchError);
-        continue;
+        .update({
+          cantidad_vendida: nuevaCantidad,
+          total_generado: nuevoTotal,
+        })
+        .eq("id", existente.id);
+
+      if (errorUpdate) {
+        console.error("Error actualizando producto vendido:", errorUpdate.message);
       }
-  
-      if (existente) {
-        const nuevaCantidad = existente.cantidad_vendida + 1;
-        const nuevoTotal = existente.total_generado + precio;
-  
-        const { error: updateError } = await supabase
-          .from("productos_vendidos")
-          .update({
-            cantidad_vendida: nuevaCantidad,
-            total_generado: nuevoTotal,
-          })
-          .eq("id", existente.id);
-  
-        if (updateError) {
-          console.error("Error al actualizar producto vendido:", updateError);
-        }
-      } else {
-        const { error: insertError } = await supabase.from("productos_vendidos").insert([
-          {
-            producto_nombre: nombre,
-            cantidad_vendida: 1,
-            total_generado: precio,
-            mes: mesActual,
-            sucursal_id: sucursalId, // <-- se guarda con la sucursal
-            sucursal_nombre: userData.sucursal_nombre,
-          },
-        ]);
-  
-        if (insertError) {
-          console.error("Error al insertar producto vendido:", insertError);
-        }
+    } else {
+      // No existe: insertamos nuevo
+      const { error: errorInsert } = await supabase.from("productos_vendidos").insert({
+        producto_nombre: nombre,
+        cantidad_vendida: cantidad,
+        id: id_producto,
+        total_generado: precio,
+        mes,
+        sucursal_id,
+        sucursal_nombre,
+      });
+
+      if (errorInsert) {
+        console.error("Error insertando producto vendido:", errorInsert.message);
       }
     }
   }
+}
 
   return (
     <div
@@ -874,7 +889,7 @@ export default function Pedidos({ window }) {
                     confirmarPago();
                     refrescarCaja();
 
-                    guardarProductosVendidos(orderSelected)
+                    guardarProductosVendidos(orderSelected, userData)
 
                     // here
                   }}

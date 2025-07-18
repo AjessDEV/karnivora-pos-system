@@ -723,46 +723,78 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
     generarTicketVenta(pedido);
 
-    await guardarProductosVendidos(pedido)
+    await guardarProductosVendidos(pedido, userData)
   };
 
   async function guardarProductosVendidos(pedido, userDat) {
   const productosAGuardar = [...pedido.lista_productos];
 
-  // Si hay delivery, lo añadimos como producto
+  // Añadir delivery como producto si aplica
   if (pedido.delivery_precio && pedido.delivery_precio > 0) {
     productosAGuardar.push({
       nombre: "Delivery",
       cantidad: 1,
-      id_producto: null, // Puedes usar null o un ID especial
-      precio: pedido.delivery_precio,
+      precio: parseFloat(pedido.delivery_precio),
     });
   }
 
   const fecha = pedido.fecha;
-  const mes = fecha.slice(0, 7); // "YYYY-MM"
+  const mes = fecha.slice(0, 7);
   const sucursal_id = userDat.sucursal_id;
   const sucursal_nombre = userDat.sucursal_nombre;
 
   for (const producto of productosAGuardar) {
-    const { nombre, cantidad, categoria, id_producto, precio } = producto;
+    const { nombre, cantidad, id_producto, precio } = producto;
 
-    const { error } = await supabase.from("productos_vendidos").insert({
-      nombre,
-      cantidad,
-      id_producto,
-      precio,
-      fecha,
-      mes,
-      sucursal_id,
-      sucursal_nombre,
-    });
+    // Buscar si ya existe un registro de este producto vendido
+    const { data: existente, error: errorBusqueda } = await supabase
+      .from("productos_vendidos")
+      .select("*")
+      .eq("producto_nombre", nombre)
+      .eq("mes", mes)
+      .eq("sucursal_id", sucursal_id)
+      .single();
 
-    if (error) {
-      console.error("Error al guardar producto vendido:", error.message);
+    if (errorBusqueda && errorBusqueda.code !== "PGRST116") {
+      console.error("Error buscando producto vendido:", errorBusqueda.message);
+      continue;
+    }
+
+    if (existente) {
+      // Ya existe: actualizamos cantidad y total generado
+      const nuevaCantidad = existente.cantidad_vendida + cantidad;
+      const nuevoTotal = existente.total_generado + precio;
+
+      const { error: errorUpdate } = await supabase
+        .from("productos_vendidos")
+        .update({
+          cantidad_vendida: nuevaCantidad,
+          total_generado: nuevoTotal,
+        })
+        .eq("id", existente.id);
+
+      if (errorUpdate) {
+        console.error("Error actualizando producto vendido:", errorUpdate.message);
+      }
+    } else {
+      // No existe: insertamos nuevo
+      const { error: errorInsert } = await supabase.from("productos_vendidos").insert({
+        producto_nombre: nombre,
+        cantidad_vendida: cantidad,
+        id: id_producto,
+        total_generado: precio,
+        mes,
+        sucursal_id,
+        sucursal_nombre,
+      });
+
+      if (errorInsert) {
+        console.error("Error insertando producto vendido:", errorInsert.message);
+      }
     }
   }
 }
+
   
 
 
