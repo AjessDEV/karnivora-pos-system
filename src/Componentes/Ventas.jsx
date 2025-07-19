@@ -457,37 +457,41 @@ export default function Ventas() {
   //
 
   const saveOrder = (newOrder) => {
-  const pedidosGuardados = JSON.parse(localStorage.getItem("pedidos")) || [];
+    const pedidosGuardados = JSON.parse(localStorage.getItem("pedidos")) || [];
 
-  // Agregar el nuevo pedido
-  const updated = [...pedidosGuardados, newOrder];
+    // Agregar el nuevo pedido
+    const updated = [...pedidosGuardados, newOrder];
 
-  // Guardar en localStorage
-  localStorage.setItem("pedidos", JSON.stringify(updated));
-};
-
+    // Guardar en localStorage
+    localStorage.setItem("pedidos", JSON.stringify(updated));
+  };
 
   // Obtén la lista de pedidos desde localStorage
-const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+  const pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
 
-// Encuentra el mayor ID actual
-let maxId = 0;
-pedidos.forEach(pedido => {
-  const idNum = parseInt(pedido.id); // convierte "001" -> 1
-  if (idNum > maxId) {
-    maxId = idNum;
-  }
-});
+  // Encuentra el mayor ID actual
+  let maxId = 0;
+  pedidos.forEach((pedido) => {
+    const idNum = parseInt(pedido.id); // convierte "001" -> 1
+    if (idNum > maxId) {
+      maxId = idNum;
+    }
+  });
 
-// Genera el siguiente ID incremental
-const nuevoId = (maxId + 1).toString().padStart(3, "0");
+  // Genera el siguiente ID incremental
+  const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
   const handleOrder = async () => {
+    const totalProductos = selectedProducts.reduce((a, b) => a + b.precio, 0);
+    const delivery = parseFloat(deliveryPrice) || 0;
+    const totalVenta = totalProductos + delivery;
+    const vuelto = totalPagado - totalVenta;
+
     const pedido = {
       id: nuevoId,
       nombre: clientName !== "" ? clientName : "Sin Nombre",
       fecha: new Date().toISOString(),
-      total_precio: totalConDelivery,
+      total_precio: totalVenta,
       pay_confirm: true,
       pay_method_1: ammountPayed1 ? "Efectivo" : "",
       pay_method_2: ammountPayed2 ? "Yape/Plin" : "",
@@ -495,9 +499,11 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
       lista_productos: selectedProducts,
       delivery_precio: deliveryPrice === "" ? 0 : deliveryPrice,
       tipo_pedido: orderType,
-      efectivo: ammountPayed1 > 0 ? parseFloat(ammountPayed1) - vuelto : 0,
-      yape: ammountPayed2 > 0 ? parseFloat(ammountPayed2) - vuelto : 0,
-      tarjeta: ammountPayed3 > 0 ? parseFloat(ammountPayed3) - vuelto : 0,
+      efectivo:
+        ammountPayed1 > 0 ? ammountPayed1 - (vuelto > 0 ? vuelto : 0) : 0,
+      yape: ammountPayed2 > 0 ? ammountPayed2 - (vuelto > 0 ? vuelto : 0) : 0,
+      tarjeta:
+        ammountPayed3 > 0 ? ammountPayed3 - (vuelto > 0 ? vuelto : 0) : 0,
       notas: notes,
     };
 
@@ -686,20 +692,13 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
           ...metodosPago,
 
           {
-            text: `Vuelto: S/. ${(
-              totalPagado -
-              orderSelected.lista_productos?.reduce((a, b) => a + b.precio, 0) +
-              parseFloat(orderSelected.delivery_precio)
-            ).toFixed(2)}`,
+            text: `Vuelto: S/. ${vuelto.toFixed(2)}`,
             fontSize: 10,
             margin: [0, 10, 0, 0],
           },
 
           {
-            text: `TOTAL: S/. ${(
-              orderSelected.lista_productos?.reduce((a, b) => a + b.precio, 0) +
-              parseFloat(orderSelected.delivery_precio)
-            ).toFixed(2)}`,
+            text: `TOTAL: S/. ${totalVenta.toFixed(2)}`,
             style: "total",
             alignment: "right",
             margin: [0, 10, 0, 0],
@@ -723,82 +722,90 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
     generarTicketVenta(pedido);
 
-    await guardarProductosVendidos(pedido, userData)
+    await guardarProductosVendidos(pedido, userData);
   };
 
   async function guardarProductosVendidos(pedido, userDat) {
-  const productosAGuardar = [...pedido.lista_productos];
+    const productosAGuardar = [...pedido.lista_productos];
 
-  // Añadir delivery como producto si aplica
-  if (pedido.delivery_precio && pedido.delivery_precio > 0) {
-    productosAGuardar.push({
-      nombre: "Delivery",
-      cantidad: 1,
-      precio: parseFloat(pedido.delivery_precio),
-    });
-  }
-
-  const fecha = pedido.fecha;
-  const mes = fecha.slice(0, 7);
-  const sucursal_id = userDat.sucursal_id;
-  const sucursal_nombre = userDat.sucursal_nombre;
-
-  for (const producto of productosAGuardar) {
-    const { nombre, cantidad, id_producto, precio } = producto;
-
-    // Buscar si ya existe un registro de este producto vendido
-    const { data: existente, error: errorBusqueda } = await supabase
-      .from("productos_vendidos")
-      .select("*")
-      .eq("producto_nombre", nombre)
-      .eq("mes", mes)
-      .eq("sucursal_id", sucursal_id)
-      .single();
-
-    if (errorBusqueda && errorBusqueda.code !== "PGRST116") {
-      console.error("Error buscando producto vendido:", errorBusqueda.message);
-      continue;
-    }
-
-    if (existente) {
-      // Ya existe: actualizamos cantidad y total generado
-      const nuevaCantidad = existente.cantidad_vendida + cantidad;
-      const nuevoTotal = existente.total_generado + precio;
-
-      const { error: errorUpdate } = await supabase
-        .from("productos_vendidos")
-        .update({
-          cantidad_vendida: nuevaCantidad,
-          total_generado: nuevoTotal,
-        })
-        .eq("id", existente.id);
-
-      if (errorUpdate) {
-        console.error("Error actualizando producto vendido:", errorUpdate.message);
-      }
-    } else {
-      // No existe: insertamos nuevo
-      const { error: errorInsert } = await supabase.from("productos_vendidos").insert({
-        producto_nombre: nombre,
-        cantidad_vendida: cantidad,
-        id: id_producto,
-        total_generado: precio,
-        mes,
-        sucursal_id,
-        sucursal_nombre,
+    // Añadir delivery como producto si aplica
+    if (pedido.delivery_precio && pedido.delivery_precio > 0) {
+      productosAGuardar.push({
+        nombre: "Delivery",
+        cantidad: 1,
+        precio: parseFloat(pedido.delivery_precio),
       });
+    }
 
-      if (errorInsert) {
-        console.error("Error insertando producto vendido:", errorInsert.message);
+    const fecha = pedido.fecha;
+    const mes = fecha.slice(0, 7);
+    const sucursal_id = userDat.sucursal_id;
+    const sucursal_nombre = userDat.sucursal_nombre;
+
+    for (const producto of productosAGuardar) {
+      const { nombre, cantidad, id_producto, precio } = producto;
+
+      // Buscar si ya existe un registro de este producto vendido
+      const { data: existente, error: errorBusqueda } = await supabase
+        .from("productos_vendidos")
+        .select("*")
+        .eq("producto_nombre", nombre)
+        .eq("mes", mes)
+        .eq("sucursal_id", sucursal_id)
+        .single();
+
+      if (errorBusqueda && errorBusqueda.code !== "PGRST116") {
+        console.error(
+          "Error buscando producto vendido:",
+          errorBusqueda.message
+        );
+        continue;
+      }
+
+      if (existente) {
+        // Ya existe: actualizamos cantidad y total generado
+        const nuevaCantidad = existente.cantidad_vendida + cantidad;
+        const nuevoTotal = existente.total_generado + precio;
+
+        const { error: errorUpdate } = await supabase
+          .from("productos_vendidos")
+          .update({
+            cantidad_vendida: nuevaCantidad,
+            total_generado: nuevoTotal,
+          })
+          .eq("id", existente.id);
+
+        if (errorUpdate) {
+          console.error(
+            "Error actualizando producto vendido:",
+            errorUpdate.message
+          );
+        }
+      } else {
+        // No existe: insertamos nuevo
+        const { error: errorInsert } = await supabase
+          .from("productos_vendidos")
+          .insert({
+            producto_nombre: nombre,
+            cantidad_vendida: cantidad,
+            id: id_producto,
+            total_generado: precio,
+            mes,
+            sucursal_id,
+            sucursal_nombre,
+          });
+
+        if (errorInsert) {
+          console.error(
+            "Error insertando producto vendido:",
+            errorInsert.message
+          );
+        }
       }
     }
   }
-}
 
-  
-
-
-  // 
+  //
 
   const actualizarGanancia = async (
     nuevaGanancia,
@@ -853,6 +860,7 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
       efectivo: ammountPayed1 > 0 ? parseFloat(ammountPayed1) : 0,
       yape: ammountPayed2 > 0 ? parseFloat(ammountPayed2) : 0,
       tarjeta: ammountPayed3 > 0 ? parseFloat(ammountPayed3) : 0,
+      notas: notes,
     };
 
     saveOrder(pedido);
@@ -879,47 +887,82 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
     });
     const cliente = pedido.nombre || "Cliente";
 
+    let total = 0;
+
     const productosFormateados = pedido.lista_productos.map((prod, index) => {
       const detalles = [];
 
+      const precioBase = prod.precio || 0;
+
+      // Mostrar vegetales (sin precio)
       if (prod.vegetalesSeleccionados?.length) {
         detalles.push({
           text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
-          fontSize: 11,
-          margin: [0, 0, 0, 5],
+          fontSize: 10,
+          margin: [0, 0, 0, 3],
         });
       }
 
+      // Mostrar salsas (sin precio)
       if (prod.salsasSeleccionadas?.length) {
         detalles.push({
           text: `• Salsas: ${prod.salsasSeleccionadas.join(", ")}`,
-          fontSize: 11,
-          margin: [0, 0, 0, 5],
+          fontSize: 10,
+          margin: [0, 0, 0, 3],
         });
       }
 
+      // Mostrar extras con precio
+      let sumaExtras = 0;
       if (prod.extrasSeleccionados?.length) {
         detalles.push({
-          text: `• Extras: ${prod.extrasSeleccionados.join(", ")}`,
-          fontSize: 11,
-          margin: [0, 0, 0, 5],
+          text: "• Extras:",
+          fontSize: 10,
+          margin: [0, 2, 0, 0],
         });
+
+        prod.extrasSeleccionados.forEach((extra) => {
+          const precio = precioExtras[extra] || 0;
+          detalles.push({
+            text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
+            fontSize: 10,
+            margin: [0, 0, 0, 0],
+          });
+        });
+
+        detalles.push({ text: "", margin: [0, 0, 0, 5] }); // Espacio extra si deseas separar productos
       }
 
+      const precioTotalProducto = precioBase + sumaExtras;
+      total += precioTotalProducto;
+
       return {
-        stack: [
+        columns: [
           {
-            text: `${prod.nombre}`,
-            bold: true,
-            fontSize: 13,
-            margin: [0, 0, 0, 3],
+            stack: [
+              {
+                text: prod.nombre,
+                bold: true,
+                fontSize: 13,
+                margin: [0, 0, 0, 3],
+              },
+              ...detalles,
+            ],
+            width: "*",
           },
-          ...detalles,
+          {
+            text: `S/ ${prod.precioBase.toFixed(2)}`,
+            alignment: "right",
+            fontSize: 10,
+            width: "50",
+            bold: true,
+          },
         ],
         margin: [0, 0, 0, 10],
       };
     });
 
+    // Nota adicional si hay
     const nota = pedido.notas
       ? [
           {
@@ -935,6 +978,7 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
         ]
       : [];
 
+    // Documento PDF
     const docDefinition = {
       pageSize: {
         width: 165, // 58 mm
@@ -963,6 +1007,13 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
         },
         ...productosFormateados,
         ...nota,
+        {
+          text: `TOTAL: S/ ${total.toFixed(2)}`,
+          bold: true,
+          alignment: "right",
+          fontSize: 14,
+          margin: [0, 20, 0, 0],
+        },
       ],
     };
 
@@ -1407,10 +1458,8 @@ const nuevoId = (maxId + 1).toString().padStart(3, "0");
 
         {/* product container */}
         <div className="relative">
-          <Pedidos window={sellWindow}/>
-          <Caja
-            window={sellWindow}
-          />
+          <Pedidos window={sellWindow} />
+          <Caja window={sellWindow} />
 
           <div
             className={`w-full absolute ${

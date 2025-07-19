@@ -101,7 +101,12 @@ export default function Pedidos({ window }) {
   const agregarProductoAlPedido = (nuevoProducto) => {
     if (!orderSelected) return;
 
-    const nuevaLista = [...orderSelected.lista_productos, nuevoProducto];
+    const productoConBase = {
+      ...nuevoProducto,
+      precioBase: nuevoProducto.precioBase ?? nuevoProducto.precio, // ← si no existe, usa el mismo precio
+    };
+
+    const nuevaLista = [...orderSelected.lista_productos, productoConBase];
     const delivery = parseFloat(orderSelected.delivery_precio) || 0;
     const nuevoTotal =
       nuevaLista.reduce((acc, p) => acc + p.precio, 0) + delivery;
@@ -403,73 +408,84 @@ export default function Pedidos({ window }) {
   };
 
   async function guardarProductosVendidos(pedido, userDat) {
-  const productosAGuardar = [...pedido.lista_productos];
+    const productosAGuardar = [...pedido.lista_productos];
 
-  // Añadir delivery como producto si aplica
-  if (pedido.delivery_precio && pedido.delivery_precio > 0) {
-    productosAGuardar.push({
-      nombre: "Delivery",
-      cantidad: 1,
-      precio: parseFloat(pedido.delivery_precio),
-    });
-  }
-
-  const fecha = pedido.fecha;
-  const mes = fecha.slice(0, 7);
-  const sucursal_id = userDat.sucursal_id;
-  const sucursal_nombre = userDat.sucursal_nombre;
-
-  for (const producto of productosAGuardar) {
-    const { nombre, cantidad, id_producto, precio } = producto;
-
-    // Buscar si ya existe un registro de este producto vendido
-    const { data: existente, error: errorBusqueda } = await supabase
-      .from("productos_vendidos")
-      .select("*")
-      .eq("producto_nombre", nombre)
-      .eq("mes", mes)
-      .eq("sucursal_id", sucursal_id)
-      .single();
-
-    if (errorBusqueda && errorBusqueda.code !== "PGRST116") {
-      console.error("Error buscando producto vendido:", errorBusqueda.message);
-      continue;
-    }
-
-    if (existente) {
-      // Ya existe: actualizamos cantidad y total generado
-      const nuevaCantidad = existente.cantidad_vendida + cantidad;
-      const nuevoTotal = existente.total_generado + precio;
-
-      const { error: errorUpdate } = await supabase
-        .from("productos_vendidos")
-        .update({
-          cantidad_vendida: nuevaCantidad,
-          total_generado: nuevoTotal,
-        })
-        .eq("id", existente.id);
-
-      if (errorUpdate) {
-        console.error("Error actualizando producto vendido:", errorUpdate.message);
-      }
-    } else {
-      // No existe: insertamos nuevo
-      const { error: errorInsert } = await supabase.from("productos_vendidos").insert({
-        producto_nombre: nombre,
-        cantidad_vendida: cantidad,
-        id: id_producto,
-        total_generado: precio,
-        mes,
-        sucursal_id,
-        sucursal_nombre,
+    // Añadir delivery como producto si aplica
+    if (pedido.delivery_precio && pedido.delivery_precio > 0) {
+      productosAGuardar.push({
+        nombre: "Delivery",
+        cantidad: 1,
+        precio: parseFloat(pedido.delivery_precio),
       });
+    }
 
-      if (errorInsert) {
-        console.error("Error insertando producto vendido:", errorInsert.message);
+    const fecha = pedido.fecha;
+    const mes = fecha.slice(0, 7);
+    const sucursal_id = userDat.sucursal_id;
+    const sucursal_nombre = userDat.sucursal_nombre;
+
+    for (const producto of productosAGuardar) {
+      const { nombre, cantidad, id_producto, precio } = producto;
+
+      // Buscar si ya existe un registro de este producto vendido
+      const { data: existente, error: errorBusqueda } = await supabase
+        .from("productos_vendidos")
+        .select("*")
+        .eq("producto_nombre", nombre)
+        .eq("mes", mes)
+        .eq("sucursal_id", sucursal_id)
+        .single();
+
+      if (errorBusqueda && errorBusqueda.code !== "PGRST116") {
+        console.error(
+          "Error buscando producto vendido:",
+          errorBusqueda.message
+        );
+        continue;
+      }
+
+      if (existente) {
+        // Ya existe: actualizamos cantidad y total generado
+        const nuevaCantidad = existente.cantidad_vendida + cantidad;
+        const nuevoTotal = existente.total_generado + precio;
+
+        const { error: errorUpdate } = await supabase
+          .from("productos_vendidos")
+          .update({
+            cantidad_vendida: nuevaCantidad,
+            total_generado: nuevoTotal,
+          })
+          .eq("id", existente.id);
+
+        if (errorUpdate) {
+          console.error(
+            "Error actualizando producto vendido:",
+            errorUpdate.message
+          );
+        }
+      } else {
+        // No existe: insertamos nuevo
+        const { error: errorInsert } = await supabase
+          .from("productos_vendidos")
+          .insert({
+            producto_nombre: nombre,
+            cantidad_vendida: cantidad,
+            id: id_producto,
+            total_generado: precio,
+            mes,
+            sucursal_id,
+            sucursal_nombre,
+          });
+
+        if (errorInsert) {
+          console.error(
+            "Error insertando producto vendido:",
+            errorInsert.message
+          );
+        }
       }
     }
   }
-}
 
   return (
     <div
@@ -617,6 +633,16 @@ export default function Pedidos({ window }) {
               <div className="md:max-w-[700px] md:mx-auto">
                 <button
                   onClick={() => {
+                    const totalProductos =
+                      orderSelected.lista_productos?.reduce(
+                        (a, b) => a + b.precio,
+                        0
+                      );
+                    const precioDelivery =
+                      parseFloat(orderSelected.delivery_precio) || 0;
+                    const totalVenta = totalProductos + precioDelivery;
+                    const vuelto = totalPagado - totalVenta;
+
                     function generarTicketVenta(orderSelected) {
                       const fechaHora = new Date(
                         orderSelected.fecha
@@ -766,25 +792,13 @@ export default function Pedidos({ window }) {
                           ...metodosPago,
 
                           {
-                            text: `Vuelto: S/. ${(
-                              totalPagado -
-                              orderSelected.lista_productos?.reduce(
-                                (a, b) => a + b.precio,
-                                0
-                              ) +
-                              parseFloat(orderSelected.delivery_precio)
-                            ).toFixed(2)}`,
+                            text: `Vuelto: S/. ${vuelto.toFixed(2)}`,
                             fontSize: 10,
                             margin: [0, 10, 0, 0],
                           },
 
                           {
-                            text: `TOTAL: S/. ${(
-                              orderSelected.lista_productos?.reduce(
-                                (a, b) => a + b.precio,
-                                0
-                              ) + parseFloat(orderSelected.delivery_precio)
-                            ).toFixed(2)}`,
+                            text: `TOTAL: S/. ${totalVenta.toFixed(2)}`,
                             style: "total",
                             alignment: "right",
                             margin: [0, 10, 0, 0],
@@ -812,47 +826,20 @@ export default function Pedidos({ window }) {
 
                     const move = {
                       fecha: orderSelected.fecha,
-                      monto_pagado:
-                        ammountPayed1 +
-                        ammountPayed2 +
-                        ammountPayed3 -
-                        (totalPagado -
-                          orderSelected.lista_productos?.reduce(
-                            (a, b) => a + b.precio,
-                            0
-                          ) +
-                          parseFloat(orderSelected.delivery_precio)),
+                      monto_pagado: totalVenta,
                       numero_pedido: orderSelected.id,
                       tipo_pago: `Pedido #${orderSelected.id}`,
                       m_efectivo: ammountPayed1 ? "Efectivo" : null,
                       m_yape: ammountPayed2 ? "Yape/Plin" : null,
                       m_tarjeta: ammountPayed3 > 0 ? "Tarjeta" : null,
                       q_efe: ammountPayed1
-                        ? ammountPayed1 -
-                          (totalPagado -
-                            orderSelected.lista_productos?.reduce(
-                              (a, b) => a + b.precio,
-                              0
-                            ) +
-                            parseFloat(orderSelected.delivery_precio))
+                        ? ammountPayed1 - (vuelto > 0 ? vuelto : 0)
                         : null,
                       q_yape: ammountPayed2
-                        ? ammountPayed2 -
-                          (totalPagado -
-                            orderSelected.lista_productos?.reduce(
-                              (a, b) => a + b.precio,
-                              0
-                            ) +
-                            parseFloat(orderSelected.delivery_precio))
+                        ? ammountPayed2 - (vuelto > 0 ? vuelto : 0)
                         : null,
                       q_tar: ammountPayed3
-                        ? ammountPayed3 -
-                          (totalPagado -
-                            orderSelected.lista_productos?.reduce(
-                              (a, b) => a + b.precio,
-                              0
-                            ) +
-                            parseFloat(orderSelected.delivery_precio))
+                        ? ammountPayed3 - (vuelto > 0 ? vuelto : 0)
                         : null,
                       ing_eg: true,
                       reason: null,
@@ -865,12 +852,7 @@ export default function Pedidos({ window }) {
                       ammountPayed1,
                       ammountPayed2,
                       ammountPayed3,
-                      totalPagado -
-                        orderSelected.lista_productos?.reduce(
-                          (a, b) => a + b.precio,
-                          0
-                        ) +
-                        parseFloat(orderSelected.delivery_precio)
+                      vuelto
                     );
 
                     const venta = parseFloat(orderSelected.total_precio);
@@ -889,7 +871,7 @@ export default function Pedidos({ window }) {
                     confirmarPago();
                     refrescarCaja();
 
-                    guardarProductosVendidos(orderSelected, userData)
+                    guardarProductosVendidos(orderSelected, userData);
 
                     // here
                   }}
@@ -1041,6 +1023,14 @@ export default function Pedidos({ window }) {
               <div className="flex flex-col gap-3 justify-center mt-6">
                 <button
                   onClick={() => {
+                    const precioExtras = {
+                      Chorizo: 4.0,
+                      Tocino: 2.0,
+                      Queso: 2.0,
+                      Huevo: 2.0,
+                      Piña: 2.0,
+                    };
+
                     const fecha = new Date();
                     const hora = fecha.toLocaleTimeString([], {
                       hour: "2-digit",
@@ -1048,52 +1038,85 @@ export default function Pedidos({ window }) {
                     });
                     const cliente = orderSelected.nombre || "Cliente";
 
+                    let total = 0;
+
                     const productosFormateados =
                       orderSelected.lista_productos.map((prod, index) => {
                         const detalles = [];
 
+                        const precioBase = prod.precio || 0;
+
+                        // Mostrar vegetales (sin precio)
                         if (prod.vegetalesSeleccionados?.length) {
                           detalles.push({
                             text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
-                            fontSize: 11,
-                            margin: [0, 0, 0, 5],
+                            fontSize: 10,
+                            margin: [0, 0, 0, 3],
                           });
                         }
 
+                        // Mostrar salsas (sin precio)
                         if (prod.salsasSeleccionadas?.length) {
                           detalles.push({
                             text: `• Salsas: ${prod.salsasSeleccionadas.join(
                               ", "
                             )}`,
-                            fontSize: 11,
-                            margin: [0, 0, 0, 5],
+                            fontSize: 10,
+                            margin: [0, 0, 0, 3],
                           });
                         }
 
+                        // Mostrar extras con precio
+                        let sumaExtras = 0;
                         if (prod.extrasSeleccionados?.length) {
                           detalles.push({
-                            text: `• Extras: ${prod.extrasSeleccionados.join(
-                              ", "
-                            )}`,
-                            fontSize: 11,
-                            margin: [0, 0, 0, 5],
+                            text: "• Extras:",
+                            fontSize: 10,
+                            margin: [0, 2, 0, 0],
                           });
+
+                          prod.extrasSeleccionados.forEach((extra) => {
+                            const precio = precioExtras[extra] || 0;
+                            detalles.push({
+                              text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
+                              fontSize: 10,
+                              margin: [0, 0, 0, 0],
+                            });
+                          });
+
+                          detalles.push({ text: "", margin: [0, 0, 0, 5] }); // Espacio extra si deseas separar productos
                         }
 
+                        const precioTotalProducto = precioBase + sumaExtras;
+                        total += precioTotalProducto;
+
                         return {
-                          stack: [
+                          columns: [
                             {
-                              text: `${prod.nombre}`,
-                              bold: true,
-                              fontSize: 13,
-                              margin: [0, 0, 0, 3],
+                              stack: [
+                                {
+                                  text: prod.nombre,
+                                  bold: true,
+                                  fontSize: 13,
+                                  margin: [0, 0, 0, 3],
+                                },
+                                ...detalles,
+                              ],
+                              width: "*",
                             },
-                            ...detalles,
+                            {
+                              text: `S/ ${prod.precioBase.toFixed(2)}`,
+                              alignment: "right",
+                              fontSize: 10,
+                              width: "50",
+                              bold: true,
+                            },
                           ],
                           margin: [0, 0, 0, 10],
                         };
                       });
 
+                    // Nota adicional si hay
                     const nota = orderSelected.notas
                       ? [
                           {
@@ -1109,6 +1132,7 @@ export default function Pedidos({ window }) {
                         ]
                       : [];
 
+                    // Documento PDF
                     const docDefinition = {
                       pageSize: {
                         width: 165, // 58 mm
@@ -1137,6 +1161,13 @@ export default function Pedidos({ window }) {
                         },
                         ...productosFormateados,
                         ...nota,
+                        {
+                          text: `TOTAL: S/ ${total.toFixed(2)}`,
+                          bold: true,
+                          alignment: "right",
+                          fontSize: 14,
+                          margin: [0, 20, 0, 0],
+                        },
                       ],
                     };
 
