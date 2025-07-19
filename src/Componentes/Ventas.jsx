@@ -1008,7 +1008,7 @@ export default function Ventas() {
         ...productosFormateados,
         ...nota,
         {
-          text: `TOTAL: S/ ${total.toFixed(2) + parseFloat(pedido.delivery_precio)}`,
+          text: `TOTAL: S/ ${(total + parseFloat(pedido.delivery_precio || 0)).toFixed(2)}`,
           bold: true,
           alignment: "right",
           fontSize: 14,
