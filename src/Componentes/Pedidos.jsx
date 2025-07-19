@@ -1162,7 +1162,7 @@ export default function Pedidos({ window }) {
                         ...productosFormateados,
                         ...nota,
                         {
-                          text: `TOTAL: S/ ${total.toFixed(2) + parseFloat(orderSelected.delivery_precio)}`,
+                          text: `TOTAL: S/ ${(total + parseFloat(orderSelected.delivery_precio || 0)).toFixed(2)}`
                           bold: true,
                           alignment: "right",
                           fontSize: 14,
