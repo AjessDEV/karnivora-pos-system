@@ -6,9 +6,7 @@ import { supabase } from "../../supabaseClient";
 import pdfMake from "pdfmake/build/pdfmake";
 import "pdfmake/build/vfs_fonts";
 
-export default function Caja({
-  window,
-}) {
+export default function Caja({ window }) {
   const { userData, loading } = useUser();
 
   const [openInput, setOpenInput] = useState(false);
@@ -21,6 +19,12 @@ export default function Caja({
   });
 
   const [newStartingCash, setNewStartingCash] = useState(0);
+
+  const [endCash, setEndCash] = useState(startingCash);
+
+  useEffect(() => {
+    localStorage.setItem("finCaja", endCash.toString());
+  }, [endCash]);
 
   const formatPrice = (value) => {
     if (typeof value !== "number") return "";
@@ -35,14 +39,14 @@ export default function Caja({
   const [decreaseReason, setDecreaseReason] = useState("");
 
   function decreaseCash() {
-    setStartingCash(startingCash - parseFloat(decreasedCash));
+    setEndCash(endCash - parseFloat(decreasedCash));
     setDecreaseReason("");
 
     const newMove = {
       fecha: new Date().toISOString(),
       monto_pagado: parseFloat(decreasedCash),
       numero_pedido: null,
-      tipo_pago: `Gasto de Caja`,
+      tipo_pago: "Gasto de Caja",
       m_efectivo: 0,
       m_yape: 0,
       m_tarjeta: 0,
@@ -76,7 +80,9 @@ export default function Caja({
     localStorage.setItem("inicio_caja", JSON.stringify(startingCash));
   }, [startingCash]);
 
-  const [efectivo, setEfectivo] = useState(0);
+  const [efectivo, setEfectivo] = useState(() => {
+    return parseFloat(localStorage.getItem("efectivo")) || 0;
+  });
   const [yapePlin, setYapePlin] = useState(0);
   const [tarjeta, setTarjeta] = useState(0);
 
@@ -90,7 +96,7 @@ export default function Caja({
     setTarjeta(storedTarjeta ? JSON.parse(storedTarjeta) : 0);
   }, [userData]);
 
-  const [movimientos, setMovimientos] = useState([])
+  const [movimientos, setMovimientos] = useState([]);
 
   useEffect(() => {
     const movesData = localStorage.getItem("movimientos");
@@ -109,8 +115,8 @@ export default function Caja({
       }
     }
 
-    console.log('movimientos',movimientos)
-  }, [userData])
+    console.log("movimientos", movimientos);
+  }, [userData]);
 
   function generarReporteVenta(userData) {
     const movimientos = JSON.parse(localStorage.getItem("movimientos") || "[]");
@@ -135,16 +141,20 @@ export default function Caja({
           fontSize: 14,
           margin: [0, 0, 0, 5],
         },
-        { text: `Fecha y hora: ${fechaHora}`, fontSize: 9, margin: [0, 0, 0, 2] },
+        {
+          text: `Fecha y hora: ${fechaHora}`,
+          fontSize: 9,
+          margin: [0, 0, 0, 2],
+        },
         {
           text: `Cajero: ${userData.user_nombre}`,
           fontSize: 9,
-          margin: [0, 0, 0, 2]
+          margin: [0, 0, 0, 2],
         },
         {
           text: `Sucursal: ${userData.sucursal_nombre}`,
           fontSize: 9,
-          margin: [0, 0, 0, 5]
+          margin: [0, 0, 0, 5],
         },
 
         {
@@ -198,7 +208,7 @@ export default function Caja({
         },
 
         {
-          text: `Caja: S/ ${inicioCaja.toFixed(2)}`,
+          text: `Inicio de Caja: S/ ${inicioCaja.toFixed(2)}`,
           fontSize: 11,
           bold: true,
           margin: [0, 0, 0, 7],
@@ -206,6 +216,8 @@ export default function Caja({
         { text: `Efectivo: S/ ${efectivo.toFixed(2)}`, fontSize: 9 },
         { text: `Yape/Plin: S/ ${yapePlin.toFixed(2)}`, fontSize: 9 },
         { text: `Tarjeta: S/ ${tarjeta.toFixed(2)}`, fontSize: 9 },
+        { text: "", margin: [0, 7, 0, 0] },
+        { text: `Fin de Caja: ${endCash.toFixed(2)}`, fontSize: 9, bold: true},
 
         {
           text: `\nTOTAL VENTA: S/ ${total.toFixed(2)}`,
@@ -228,64 +240,62 @@ export default function Caja({
 
   async function saveGanancias() {
     const today = new Date().toLocaleDateString("en-CA");
-        const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
-        const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
-        const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
-        const total = efectivo + yapePlin + tarjeta;
+    const efectivo = parseFloat(localStorage.getItem("efectivo") || "0");
+    const yapePlin = parseFloat(localStorage.getItem("yape/plin") || "0");
+    const tarjeta = parseFloat(localStorage.getItem("tarjeta") || "0");
+    const total = efectivo + yapePlin + tarjeta;
 
-        await guardarVentasAntriores({
-          fecha: today,
-          sucursal_id: userData.sucursal_id,
-          total,
-          sucursal_nombre: userData.sucursal_nombre,
-        });
+    await guardarVentasAntriores({
+      fecha: today,
+      sucursal_id: userData.sucursal_id,
+      total,
+      sucursal_nombre: userData.sucursal_nombre,
+    });
 
-        localStorage.setItem("efectivo", "0");
-        localStorage.setItem("yape/plin", "0");
-        localStorage.setItem("tarjeta", "0");
-        localStorage.setItem("pedidos", JSON.stringify([]));
-        localStorage.setItem("movimientos", JSON.stringify([]));
-        localStorage.setItem("gastos", JSON.stringify([]));
-        const sucId = userData?.sucursal_id;
+    localStorage.setItem("efectivo", "0");
+    localStorage.setItem("yape/plin", "0");
+    localStorage.setItem("tarjeta", "0");
+    localStorage.setItem("pedidos", JSON.stringify([]));
+    localStorage.setItem("movimientos", JSON.stringify([]));
+    localStorage.setItem("gastos", JSON.stringify([]));
+    const sucId = userData?.sucursal_id;
 
-        await resetGanancias(sucId);
-      
+    await resetGanancias(sucId);
 
-      localStorage.setItem("lastLoginDate", today);
+    localStorage.setItem("lastLoginDate", today);
   }
 
+  const resetGanancias = async (sucursalId) => {
+    const { error } = await supabase
+      .from("ganancias")
+      .update({ total_ganancia: 0 })
+      .eq("sucursal_id", sucursalId);
 
-      const resetGanancias = async (sucursalId) => {
-        const { error } = await supabase
-          .from("ganancias")
-          .update({ total_ganancia: 0 })
-          .eq("sucursal_id", sucursalId);
-    
-        if (error) {
-          console.error("error al resetear ganancias", error.message);
-        }
-      };
-    
-      async function guardarVentasAntriores({
-        fecha,
-        sucursal_id,
-        total,
-        sucursal_nombre,
-      }) {
-        const { error } = await supabase.from("ventas_diarias").insert({
-          fecha,
-          sucursal_id,
-          total_ganancia: total,
-          sucursal_name: sucursal_nombre,
-        });
-    
-        if (error) {
-          console.error("Error al Guardar Ventas", error.message);
-        } else {
-          console.log("ventas anteriores guardadas correctamente");
-          alert("ventas anteriores guardadas correctamente");
-        }
-      }
+    if (error) {
+      console.error("error al resetear ganancias", error.message);
+    }
+  };
+
+  async function guardarVentasAntriores({
+    fecha,
+    sucursal_id,
+    total,
+    sucursal_nombre,
+  }) {
+    const { error } = await supabase.from("ventas_diarias").insert({
+      fecha,
+      sucursal_id,
+      total_ganancia: total,
+      sucursal_name: sucursal_nombre,
+    });
+
+    if (error) {
+      console.error("Error al Guardar Ventas", error.message);
+    } else {
+      console.log("ventas anteriores guardadas correctamente");
+      alert("ventas anteriores guardadas correctamente");
+    }
+  }
 
   return (
     <div
@@ -318,6 +328,7 @@ export default function Caja({
           >
             <IconEdit size={30} stroke={2} />
           </button>
+
           <div
             className={`absolute w-[80%] max-h-max bg-[#eeeeee] top-0 left-0 ${
               openInput ? "scale-100" : "scale-0"
@@ -345,7 +356,9 @@ export default function Caja({
             </button>
           </div>
         </div>
-
+        <p className="font-bold bg-[#70707020] px-2 py-1 max-w-max rounded-[10px] md:text-[25px]">
+          Fin de Caja: <b>S/. {formatPrice(endCash + efectivo + tarjeta + yapePlin)}</b>
+        </p>
         <div className="flex gap-[10px] w-full">
           <p className="font-bold w-full md:text-[25px]">
             Efectivo: <br /> <b>S/. {formatPrice(efectivo)}</b>
@@ -562,11 +575,11 @@ export default function Caja({
         </div>
 
         <button
-        onClick={() => saveGanancias()}
-        className="font-bold text-[16px] px-3 py-2 bg-[#ff3333] text-white rounded-full bottom-[200px] right-4 md:bottom-22 md:text-[16px] cursor-pointer border-3 border-[#ff3333] hover:bg-white hover:text-[#ff3333] transition-all duration-200"
-      >
-        Cerrar Turno
-      </button>
+          onClick={() => saveGanancias()}
+          className="font-bold text-[16px] mt-[20px] px-3 py-2 bg-[#ff3333] text-white rounded-full bottom-[200px] right-4 md:bottom-22 md:text-[16px] cursor-pointer border-3 border-[#ff3333] hover:bg-white hover:text-[#ff3333] transition-all duration-200"
+        >
+          Cerrar Turno
+        </button>
       </div>
     </div>
   );
