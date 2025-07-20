@@ -1023,87 +1023,160 @@ export default function Pedidos({ window }) {
               <div className="flex flex-col gap-3 justify-center mt-6">
                 <button
   onClick={() => {
-    let total = 0;
+    const fecha = new Date();
+const hora = fecha.toLocaleTimeString([], {
+  hour: "2-digit",
+  minute: "2-digit",
+});
+const cliente = orderSelected.nombre || "Cliente";
 
-    const productosFormateados = orderSelected.lista_productos.map((prod) => {
-      const precioBase = parseFloat(prod.precioBase) || 0;
-      const extras =
-        prod.extras?.reduce((acc, extra) => acc + (parseFloat(extra.precio) || 0), 0) || 0;
+let total = 0;
 
-      const precioFinal = precioBase + extras;
-      total += precioFinal;
+const productosFormateados = orderSelected.lista_productos.map((prod, index) => {
+  const detalles = [];
 
-      return [
-        { text: prod.nombre, fontSize: 10, bold: true },
-        ...(prod.vegetales?.length
-          ? [{ text: "Vegetales: " + prod.vegetales.join(", "), fontSize: 9 }]
-          : []),
-        ...(prod.salsas?.length
-          ? [{ text: "Salsas: " + prod.salsas.join(", "), fontSize: 9 }]
-          : []),
-        ...(prod.extras?.length
-          ? [
-              {
-                text:
-                  "Extras: " +
-                  prod.extras
-                    .map((extra) => `${extra.nombre} (+${extra.precio})`)
-                    .join(", "),
-                fontSize: 9,
-              },
-            ]
-          : []),
-        ...(prod.notas?.length
-          ? [{ text: "Notas: " + prod.notas, fontSize: 9, italics: true }]
-          : []),
-        { text: "------------------------------", fontSize: 9, margin: [0, 5] },
-      ];
-    }).flat();
+  const precioBase = prod.precio || 0;
 
-    const deliveryPrecio = parseFloat(orderSelected.delivery_precio) || 0;
-    const totalConDelivery = total + deliveryPrecio;
+  // Mostrar vegetales (sin precio)
+  if (prod.vegetalesSeleccionados?.length) {
+    detalles.push({
+      text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
+      fontSize: 10,
+      margin: [0, 0, 0, 3],
+    });
+  }
 
-    const docDefinition = {
-      pageSize: { width: 165, height: 'auto' }, // 58mm
-      content: [
-        {
-          text: `PEDIDO #${orderSelected.id}`,
-          alignment: "center",
-          fontSize: 14,
-          bold: true,
-          margin: [0, 0, 0, 10],
-        },
-        {
-          text: `Hora: ${new Date().toLocaleTimeString()}`,
-          fontSize: 10,
-        },
-        {
-          text: `Cliente: ${orderSelected.nombre_cliente || "Sin nombre"}`,
-          fontSize: 10,
-          margin: [0, 0, 0, 10],
-        },
-        {
-          stack: productosFormateados,
-          margin: [0, 0, 0, 10],
-        },
-        {
-          text: `Delivery: S/ ${deliveryPrecio.toFixed(2)}`,
-          alignment: "right",
-          fontSize: 10,
-        },
-        {
-          text: `Total: S/ ${totalConDelivery.toFixed(2)}`,
-          alignment: "right",
-          fontSize: 12,
-          bold: true,
-          margin: [0, 5, 0, 0],
-        },
-      ],
-    };
+  // Mostrar salsas (sin precio)
+  if (prod.salsasSeleccionadas?.length) {
+    detalles.push({
+      text: `• Salsas: ${prod.salsasSeleccionadas.join(", ")}`,
+      fontSize: 10,
+      margin: [0, 0, 0, 3],
+    });
+  }
 
-    pdfMake.createPdf(docDefinition).open();
-  }}
-  className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
+  // Mostrar extras con precio
+  let sumaExtras = 0;
+  if (prod.extrasSeleccionados?.length) {
+    detalles.push({
+      text: "• Extras:",
+      fontSize: 10,
+      margin: [0, 2, 0, 0],
+    });
+
+    prod.extrasSeleccionados.forEach((extra) => {
+      const precio = precioExtras[extra] || 0;
+      sumaExtras += precio;
+      detalles.push({
+        text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
+        fontSize: 10,
+        margin: [0, 0, 0, 0],
+      });
+    });
+
+    detalles.push({ text: "", margin: [0, 0, 0, 5] }); // Espacio extra si deseas separar productos
+  }
+
+  const precioTotalProducto = precioBase + sumaExtras;
+  total += precioTotalProducto;
+
+  return {
+    columns: [
+      {
+        stack: [
+          {
+            text: prod.nombre,
+            bold: true,
+            fontSize: 13,
+            margin: [0, 0, 0, 3],
+          },
+          ...detalles,
+        ],
+        width: "*",
+      },
+      {
+        text: `S/ ${precioTotalProducto.toFixed(2)}`,
+        alignment: "right",
+        fontSize: 10,
+        width: "50",
+        bold: true,
+      },
+    ],
+    margin: [0, 0, 0, 10],
+  };
+});
+
+// Nota adicional si hay
+const nota = orderSelected.notas
+  ? [
+      {
+        text: "NOTA:",
+        bold: true,
+        margin: [0, 20, 0, 5],
+        fontSize: 12,
+      },
+      {
+        text: orderSelected.notas,
+        fontSize: 12,
+      },
+    ]
+  : [];
+
+// Calcular delivery y total final
+const deliveryPrecio = parseFloat(orderSelected.delivery_precio || 0);
+const totalFinal = total + deliveryPrecio;
+
+const docDefinition = {
+  pageSize: {
+    width: 165, // 58 mm
+    height: "auto",
+  },
+  pageMargins: [10, 10, 10, 10],
+  content: [
+    {
+      text: `PEDIDO #${orderSelected.id}`,
+      alignment: "center",
+      fontSize: 18,
+      bold: true,
+      margin: [0, 0, 0, 10],
+    },
+    { text: `Hora: ${hora}`, fontSize: 10 },
+    {
+      text: `Cliente: ${cliente}`,
+      fontSize: 10,
+      margin: [0, 0, 0, 3],
+    },
+    {
+      text: `${orderSelected.tipo_pedido}`,
+      fontSize: 11,
+      bold: true,
+      margin: [0, 0, 0, 10],
+    },
+    ...productosFormateados,
+    ...nota,
+    ...(deliveryPrecio > 0
+      ? [
+          {
+            text: `Delivery: S/ ${deliveryPrecio.toFixed(2)}`,
+            alignment: "right",
+            fontSize: 11,
+            margin: [0, 10, 0, 0],
+          },
+        ]
+      : []),
+    {
+      text: `TOTAL: S/ ${totalFinal.toFixed(2)}`,
+      bold: true,
+      alignment: "right",
+      fontSize: 14,
+      margin: [0, 10, 0, 0],
+    },
+  ],
+};
+
+pdfMake.createPdf(docDefinition).open(); 
+          
+  className="bg-[#ffa600] active:bg-[ffa60080] text-white text-[20px] rounded w-full transition"
 >
   Generar Comanda
 </button>
