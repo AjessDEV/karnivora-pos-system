@@ -1023,6 +1023,15 @@ export default function Pedidos({ window }) {
               <div className="flex flex-col gap-3 justify-center mt-6">
                 <button
   onClick={() => {
+    const precioExtras = {
+      Chorizo: 4.0,
+      Tocino: 2.0,
+      Queso: 2.0,
+      Huevo: 2.0,
+      Piña: 2.0,
+    }
+
+    
     const fecha = new Date();
 const hora = fecha.toLocaleTimeString([], {
   hour: "2-digit",
