@@ -1185,7 +1185,7 @@ const docDefinition = {
 
 pdfMake.createPdf(docDefinition).open(); }}
           
-  className="bg-[#ffa600] active:bg-[ffa60080] text-white text-[20px] rounded w-full transition"
+  className="bg-[#ffa600] active:bg-[ffa60080] py-3 text-white text-[20px] rounded w-full transition"
 >
   Generar Comanda
 </button>
