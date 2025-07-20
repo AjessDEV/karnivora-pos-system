@@ -14,6 +14,9 @@ import "pdfmake/build/vfs_fonts";
 
 import { useUser } from "../supComponentes/UserContext";
 
+// REGISTRO DE MOVIMIENTO
+import { registrarMovimiento } from "../supComponentes/registrarMovimiento";
+
 export default function Pedidos({ window }) {
   const formatPrice = (value) => {
     if (typeof value !== "number") return "";
@@ -98,7 +101,7 @@ export default function Pedidos({ window }) {
     }
   };
 
-  const agregarProductoAlPedido = (nuevoProducto) => {
+  const agregarProductoAlPedido = async (nuevoProducto) => {
     if (!orderSelected) return;
 
     const productoConBase = {
@@ -127,6 +130,12 @@ export default function Pedidos({ window }) {
     localStorage.setItem("pedidos", JSON.stringify(pedidosActualizados));
 
     refrescarPedidos();
+
+    // registrar movimiento
+    await guardarRegistro(
+      `${userData.user_nombre} agregó "${nuevoProducto.nombre}" al pedido #${orderSelected.id}`,
+      'Adición'
+    )
   };
 
   const [confirmPaymentMenu, setConfirmPaymentMenu] = useState(false);
@@ -380,7 +389,7 @@ export default function Pedidos({ window }) {
     }));
   };
 
-  const eliminarPedido = (idPedido) => {
+  const eliminarPedido = async (idPedido) => {
     const pedidosGuardados = JSON.parse(localStorage.getItem("pedidos")) || [];
 
     const pedidosActualizados = pedidosGuardados.filter(
@@ -395,6 +404,12 @@ export default function Pedidos({ window }) {
 
     setShow(false);
     toggleDelTab();
+
+    // registrar movimiento
+    await guardarRegistro(
+      `${userData.user_nombre} Eliminó el pedido #${idPedido}`,
+      'Eliminación'
+    )
   };
 
   const refrescarCaja = () => {
@@ -485,6 +500,18 @@ export default function Pedidos({ window }) {
         }
       }
     }
+  }
+
+  const guardarRegistro = async (detalle, acci) => {
+
+    await registrarMovimiento(
+      {
+        nombre: userData.user_nombre,
+        sucursal: userData.sucursal_nombre,
+        accion: acci,
+        detalles: detalle,
+      }
+    )
   }
 
   return (
@@ -626,7 +653,7 @@ export default function Pedidos({ window }) {
 
               <div className="md:max-w-[700px] md:mx-auto">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const totalProductos =
                       orderSelected.lista_productos?.reduce(
                         (a, b) => a + b.precio,
@@ -867,7 +894,11 @@ export default function Pedidos({ window }) {
 
                     guardarProductosVendidos(orderSelected, userData);
 
-                    // here
+                    // registrar movimiento
+                    await guardarRegistro(
+                      `${userData.user_nombre} realizó una venta de S/. ${parseFloat(order.total_precio).toFixed(2)}`,
+                      'Venta'
+                    )
                   }}
                   className={`py-4 rounded-[15px] w-full ${totalPagado >=
                     orderSelected.lista_productos?.reduce(
@@ -1011,7 +1042,7 @@ export default function Pedidos({ window }) {
 
               <div className="flex flex-col gap-3 justify-center mt-6">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const precioExtras = {
                       Chorizo: 4.0,
                       Tocino: 2.0,
@@ -1173,13 +1204,12 @@ export default function Pedidos({ window }) {
                     };
 
                     pdfMake.createPdf(docDefinition).open();
-                    console.log(totalFinal);
                   }}
 
 
                   className="bg-[#ffa600] active:bg-[ffa60080] py-3 text-white text-[20px] rounded w-full transition"
                 >
-                  Generar Comanda
+                  Imprimir Comanda
                 </button>
                 <button
                   onClick={() => setConfirmPaymentMenu(true)}

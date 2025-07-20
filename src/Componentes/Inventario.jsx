@@ -6,8 +6,24 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../supabaseClient";
 import { useUser } from "../supComponentes/UserContext";
 
+//REGISTRAR MOVIMIENTOS
+
+import { registrarMovimiento } from "../supComponentes/registrarMovimiento";
+
 export default function Inventario() {
   const { userData, loading } = useUser();
+
+  const guardarRegistro = async (detalle, acci) => {
+
+    await registrarMovimiento(
+      {
+        nombre: userData.user_nombre,
+        sucursal: userData.sucursal_nombre,
+        accion: acci,
+        detalles: detalle,
+      }
+    )
+  }
 
   const [storesMenu, setStoresMenu] = useState(false);
   const toggleStoresMenu = () => {
@@ -158,6 +174,7 @@ export default function Inventario() {
       return;
     }
 
+    const currentQuantity = item.cantidad;
     const quantityNew = item.cantidad + floatQuantity;
 
     const { data, error } = await supabase
@@ -169,6 +186,11 @@ export default function Inventario() {
       console.error("hubo un error", error);
     } else {
       console.log("Aumento exitoso", data);
+
+      await guardarRegistro(
+        `${userData.user_nombre} aumentó ${floatQuantity} ${item.unidad_medida} de "${item.nombre}". (Antes: ${currentQuantity} -> Ahora: ${quantityNew})`,
+        'Inventario'
+      )
 
       fetchInventario();
       setIncreaseMenu(null);
@@ -191,6 +213,7 @@ export default function Inventario() {
       return;
     }
 
+    const currentQuantity = item.cantidad;
     const quantityNew = item.cantidad - floatQuantity;
 
     if (quantityNew < 0) {
@@ -207,6 +230,11 @@ export default function Inventario() {
       console.error("Hubo un error", error);
     } else {
       console.log("Descuento exitoso", data);
+
+      await guardarRegistro(
+        `${userData.user_nombre} restó ${floatQuantity} ${item.unidad_medida} de "${item.nombre}". (Antes: ${currentQuantity} -> Ahora: ${quantityNew})`,
+        'Inventario'
+      )
 
       fetchInventario();
       setIncreaseMenu(null);

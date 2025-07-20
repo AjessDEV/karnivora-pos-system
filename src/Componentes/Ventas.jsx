@@ -15,6 +15,9 @@ import Pedidos from "./Pedidos";
 import Caja from "./Caja";
 import { useUser } from "../supComponentes/UserContext";
 
+// REGISTRO DE MOVIMIENTOS
+import { registrarMovimiento } from "../supComponentes/registrarMovimiento";
+
 export default function Ventas() {
   const { userData, loading } = useUser();
 
@@ -723,6 +726,17 @@ export default function Ventas() {
     generarTicketVenta(pedido);
 
     await guardarProductosVendidos(pedido, userData);
+
+    // registro de movimiento
+
+    await registrarMovimiento(
+      {
+        nombre: userData.user_nombre,
+        sucursal: userData.sucursal_nombre,
+        accion: 'Venta',
+        detalles: `${userData.user_nombre} realizó una venta de S/.${parseFloat(pedido.total_precio).toFixed(2)}`,
+      }
+    )
   };
 
   async function guardarProductosVendidos(pedido, userDat) {

@@ -1,6 +1,7 @@
 import { useUser } from "../supComponentes/UserContext";
 import { supabase } from "../../supabaseClient";
 import { useState, useEffect } from "react";
+import { IconChevronLeft, IconReceiptFilled } from "@tabler/icons-react";
 
 export default function Registro() {
   const { userData, loading } = useUser();
@@ -88,6 +89,31 @@ export default function Registro() {
   }, []);
 
   //
+  const [registroMov, setRegistroMov] = useState([])
+  const fetchMovimientos = async () => {
+    const { data, error } = await supabase
+      .from('movimientos')
+      .select('*')
+
+    if (error) {
+      console.log('Error al mostrar los movimientos', error.message);
+    } else {
+      setRegistroMov(data)
+      console.log('movimeintos obtenidos', data);
+      
+    }
+  }
+
+  useEffect(() => {
+    fetchMovimientos()
+  }, [userData])
+
+  const [movOpen, setMovOpen] = useState(false)
+
+  const handleMovWindow = () => {
+    setMovOpen(prev => !prev)
+    
+  }
 
   if (loading && !userData) {
     return <div></div>;
@@ -110,6 +136,11 @@ export default function Registro() {
     return (
       <>
         <div className="size-full flex flex-col itmes-center p-4 md:pl-[300px] pb-[200px]">
+
+          <button onClick={handleMovWindow} className="fixed bottom-[120px] md:bottom-5 right-5 bg-[#26ce6c] z-99 rounded-full w-[60px] h-[60px] md:w-[80px] md:h-[80px] flex justify-center items-center shadow-[0_0_20px_#00000040] cursor-pointer active:scale-[0.6] transition-all ease-in-out duration-300">
+            <IconReceiptFilled size={40} className="text-white"/>
+          </button>
+
           <div className="w-full h-[180px] flex flex-col items-center justify-center rounded-[35px] p-3 bg-gradient-to-t from-[#ffc600] to-[#ffa600] md:items-start md:justify-start md:p-5">
             <p className="text-white font-bold text-[20px] md:text-[30px]">
               Ingreso Total:
@@ -270,6 +301,40 @@ export default function Registro() {
                   );
                 }
               )}
+            </div>
+
+            <div className={`size-full bg-white fixed top-0 z-999 py-2 px-3 ${movOpen === true ? 'left-0 md:left-[50%] md:w-[50%]' : 'left-full'} transition-all ease-in-out duration-300 overflow-y-auto`}>
+              <div className="flex gap-[15px]">
+                <button
+                  onClick={handleMovWindow}
+                  className="cursor-pointer"
+                >
+                  <IconChevronLeft size={30} stroke={2} />
+                </button>
+                <h1 className="text-[28px]">Movimientos</h1>
+              </div>
+
+
+              <div>
+                {registroMov.slice().reverse().map((mov) => {
+                  return (
+                    <div key={mov.id} className="rounded-[10px] shadow-[0_0_20px_#00000020] px-3 py-2 my-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <p className="truncate mx-w-[100px] font-bold">{mov.nombre}</p>
+                        <p className="font-bold">{mov.sucursal}</p>
+                        <p className="font-bold">{mov.accion}</p>
+                      </div>
+
+                      <div>
+                        <p>{mov.detalles}</p>
+                        <br />
+                        <p className="font-black text-[#70707070]">{new Date(mov.fecha_hora).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )
+                })}             
+              </div>
+
             </div>
           </div>
         </div>

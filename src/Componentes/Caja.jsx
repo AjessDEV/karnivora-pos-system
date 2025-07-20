@@ -6,8 +6,23 @@ import { supabase } from "../../supabaseClient";
 import pdfMake from "pdfmake/build/pdfmake";
 import "pdfmake/build/vfs_fonts";
 
+// REGISTRO DE MOVIMIENTOS
+import { registrarMovimiento } from "../supComponentes/registrarMovimiento";
+
 export default function Caja({ window }) {
   const { userData, loading } = useUser();
+
+  const guardarRegistro = async (detalle, acci) => {
+  
+      await registrarMovimiento(
+        {
+          nombre: userData.user_nombre,
+          sucursal: userData.sucursal_nombre,
+          accion: acci,
+          detalles: detalle,
+        }
+      )
+    }
 
   const [openInput, setOpenInput] = useState(false);
   const toggleCashInput = () => {
@@ -39,7 +54,7 @@ export default function Caja({ window }) {
   const [decreasedCash, setDecreasedCash] = useState(0);
   const [decreaseReason, setDecreaseReason] = useState("");
 
-  function decreaseCash() {
+  async function decreaseCash() {
     const monto = parseFloat(decreasedCash);
     if (isNaN(monto)) return;
 
@@ -63,6 +78,12 @@ export default function Caja({ window }) {
     };
 
     guardarGasto(newMove);
+
+    //registrar movimiento
+    await guardarRegistro(
+      `${userData.user_nombre} registró un gasto de S/. ${parseFloat(decreasedCash).toFixed(2)} por ${decreaseReason}`,
+      'Gasto'
+    )
   }
 
   const [gasto, setGasto] = useState([]);
@@ -345,9 +366,16 @@ export default function Caja({ window }) {
               className="font-[900] text-[40px] w-full border-3 border-[#e0e0e0] rounded-[10px] p-2 text-center"
             />
             <button
-              onClick={() => {
+              onClick={async () => {
                 setStartingCash(parseFloat(newStartingCash));
                 setOpenInput(false);
+
+                //registrar movimiento
+
+                await guardarRegistro(
+                  `${userData.user_nombre} colocó el inicio de caja a S/. ${newStartingCash}`,
+                  'Caja'
+                )
               }}
               className={`${newStartingCash > 0
                   ? "bg-[#ffa600]"
@@ -407,7 +435,7 @@ export default function Caja({ window }) {
                 decreaseCash();
                 setDecreaseInput(false);
               }}
-              className={`${decreasedCash > 0
+              className={`${decreasedCash > 0 && decreaseReason
                   ? "bg-[#ffa600]"
                   : "bg-[#e0e0e0] pointer-events-none"
                 } py-3 w-full font-bold text-white text-[20px] rounded-[10px] active:brightness-[0.95] transition-all ease-in-out duration-100`}
