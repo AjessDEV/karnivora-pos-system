@@ -1040,81 +1040,75 @@ export default function Pedidos({ window }) {
 
                     let total = 0;
 
-                    const productosFormateados =
-                      orderSelected.lista_productos.map((prod, index) => {
-                        const detalles = [];
+const productosFormateados = orderSelected.lista_productos.map((prod) => {
+  const detalles = [];
+  const precioBase = prod.precio || 0;
+  let sumaExtras = 0;
 
-                        const precioBase = prod.precio || 0;
+  if (prod.vegetalesSeleccionados?.length) {
+    detalles.push({
+      text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
+      fontSize: 10,
+      margin: [0, 0, 0, 3],
+    });
+  }
 
-                        // Mostrar vegetales (sin precio)
-                        if (prod.vegetalesSeleccionados?.length) {
-                          detalles.push({
-                            text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
-                            fontSize: 10,
-                            margin: [0, 0, 0, 3],
-                          });
-                        }
+  if (prod.salsasSeleccionadas?.length) {
+    detalles.push({
+      text: `• Salsas: ${prod.salsasSeleccionadas.join(", ")}`,
+      fontSize: 10,
+      margin: [0, 0, 0, 3],
+    });
+  }
 
-                        // Mostrar salsas (sin precio)
-                        if (prod.salsasSeleccionadas?.length) {
-                          detalles.push({
-                            text: `• Salsas: ${prod.salsasSeleccionadas.join(
-                              ", "
-                            )}`,
-                            fontSize: 10,
-                            margin: [0, 0, 0, 3],
-                          });
-                        }
+  if (prod.extrasSeleccionados?.length) {
+    detalles.push({
+      text: "• Extras:",
+      fontSize: 10,
+      margin: [0, 2, 0, 0],
+    });
 
-                        // Mostrar extras con precio
-                        let sumaExtras = 0;
-                        if (prod.extrasSeleccionados?.length) {
-                          detalles.push({
-                            text: "• Extras:",
-                            fontSize: 10,
-                            margin: [0, 2, 0, 0],
-                          });
+    prod.extrasSeleccionados.forEach((extra) => {
+      const precio = precioExtras[extra] || 0;
+      sumaExtras += precio;
+      detalles.push({
+        text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
+        fontSize: 10,
+        margin: [0, 0, 0, 0],
+      });
+    });
 
-                          prod.extrasSeleccionados.forEach((extra) => {
-                            const precio = precioExtras[extra] || 0;
-                            detalles.push({
-                              text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
-                              fontSize: 10,
-                              margin: [0, 0, 0, 0],
-                            });
-                          });
+    detalles.push({ text: "", margin: [0, 0, 0, 5] });
+  }
 
-                          detalles.push({ text: "", margin: [0, 0, 0, 5] }); // Espacio extra si deseas separar productos
-                        }
+  const precioTotalProducto = precioBase + sumaExtras;
+  total += precioTotalProducto;
 
-                        const precioTotalProducto = precioBase + sumaExtras;
-                        total += precioTotalProducto;
-
-                        return {
-                          columns: [
-                            {
-                              stack: [
-                                {
-                                  text: prod.nombre,
-                                  bold: true,
-                                  fontSize: 13,
-                                  margin: [0, 0, 0, 3],
-                                },
-                                ...detalles,
-                              ],
-                              width: "*",
-                            },
-                            {
-                              text: `S/ ${prod.precioBase.toFixed(2)}`,
-                              alignment: "right",
-                              fontSize: 10,
-                              width: "50",
-                              bold: true,
-                            },
-                          ],
-                          margin: [0, 0, 0, 10],
-                        };
-                      });
+  return {
+    columns: [
+      {
+        stack: [
+          {
+            text: prod.nombre,
+            bold: true,
+            fontSize: 13,
+            margin: [0, 0, 0, 3],
+          },
+          ...detalles,
+        ],
+        width: "*",
+      },
+      {
+        text: `S/ ${precioBase.toFixed(2)}`,
+        alignment: "right",
+        fontSize: 10,
+        width: "50",
+        bold: true,
+      },
+    ],
+    margin: [0, 0, 0, 10],
+  };
+});
 
                     // Nota adicional si hay
                     const nota = orderSelected.notas
