@@ -489,23 +489,20 @@ export default function Pedidos({ window }) {
 
   return (
     <div
-      className={`w-full absolute ${
-        window === "Pedidos" ? "top-0 opacity-100" : "top-[100px] opacity-0"
-      } left-0 flex flex-col gap-[20px] transition-all ease-in-out duration-200 pb-[100px]`}
+      className={`w-full absolute ${window === "Pedidos" ? "top-0 opacity-100" : "top-[100px] opacity-0"
+        } left-0 flex flex-col gap-[20px] transition-all ease-in-out duration-200 pb-[100px]`}
     >
       <h2 className="text-[30px] font-bold mb-[10px] text-center">Pedidos</h2>
 
       <div
-        className={`fixed top-0 z-101 ${
-          show ? "left-0 md:left-[50%]" : "left-full"
-        } size-full bg-white p-4 transition-all ease-in-out duration-300 overflow-y-auto md:h-full md:w-[50%] md:shadow-[-20px_0_40px_#00000020]`}
+        className={`fixed top-0 z-101 ${show ? "left-0 md:left-[50%]" : "left-full"
+          } size-full bg-white p-4 transition-all ease-in-out duration-300 overflow-y-auto md:h-full md:w-[50%] md:shadow-[-20px_0_40px_#00000020]`}
       >
         {orderSelected && (
           <>
             <div
-              className={`fixed top-0 z-101 ${
-                confirmPaymentMenu ? "left-0" : "left-full"
-              } size-full bg-white p-4 transition-all ease-in-out duration-300 overflow-y-auto md:shadow-[-20px_0_40px_#00000020]`}
+              className={`fixed top-0 z-101 ${confirmPaymentMenu ? "left-0" : "left-full"
+                } size-full bg-white p-4 transition-all ease-in-out duration-300 overflow-y-auto md:shadow-[-20px_0_40px_#00000020]`}
             >
               <div className="flex gap-[15px]">
                 <button
@@ -537,33 +534,30 @@ export default function Pedidos({ window }) {
               <div className="flex w-full gap-[10px] my-2 md:max-w-[700px] md:mx-auto">
                 <button
                   onClick={toggleCashMethod}
-                  className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${
-                    cashMethod
-                      ? "border-[#ffa600] bg-[#ffa600] text-white"
-                      : "border-[#e0e0e0]"
-                  } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
+                  className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${cashMethod
+                    ? "border-[#ffa600] bg-[#ffa600] text-white"
+                    : "border-[#e0e0e0]"
+                    } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
                 >
                   <IconCash size={40} stroke={2} />
                   Efectivo
                 </button>
                 <button
                   onClick={toggleEWalletMethod}
-                  className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${
-                    eWalletMethod
-                      ? "border-[#ffa600] bg-[#ffa600] text-white"
-                      : "border-[#e0e0e0]"
-                  } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
+                  className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${eWalletMethod
+                    ? "border-[#ffa600] bg-[#ffa600] text-white"
+                    : "border-[#e0e0e0]"
+                    } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
                 >
                   <IconQrcode size={40} stroke={2} />
                   Yape/Plin
                 </button>
                 <button
                   onClick={toggleCardMethod}
-                  className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${
-                    cardMethod
-                      ? "border-[#ffa600] bg-[#ffa600] text-white"
-                      : "border-[#e0e0e0]"
-                  } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
+                  className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${cardMethod
+                    ? "border-[#ffa600] bg-[#ffa600] text-white"
+                    : "border-[#e0e0e0]"
+                    } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
                 >
                   <IconCreditCardFilled size={40} />
                   Tarjeta
@@ -612,19 +606,19 @@ export default function Pedidos({ window }) {
                   <p className="text-[45px] font-[900]">
                     S/.{" "}
                     {totalPagado >
-                    orderSelected.lista_productos?.reduce(
-                      (a, b) => a + b.precio,
-                      0
-                    ) +
+                      orderSelected.lista_productos?.reduce(
+                        (a, b) => a + b.precio,
+                        0
+                      ) +
                       parseFloat(orderSelected.delivery_precio)
                       ? Number(
-                          totalPagado -
-                            (orderSelected.lista_productos?.reduce(
-                              (a, b) => a + b.precio,
-                              0
-                            ) +
-                              parseFloat(orderSelected.delivery_precio))
-                        ).toFixed(2)
+                        totalPagado -
+                        (orderSelected.lista_productos?.reduce(
+                          (a, b) => a + b.precio,
+                          0
+                        ) +
+                          parseFloat(orderSelected.delivery_precio))
+                      ).toFixed(2)
                       : formatPrice(0)}
                   </p>
                 </div>
@@ -768,20 +762,20 @@ export default function Pedidos({ window }) {
 
                           ...(orderSelected.delivery_precio
                             ? [
-                                {
-                                  columns: [
-                                    { text: "Delivery", fontSize: 10 },
-                                    {
-                                      text: `S/. ${parseFloat(
-                                        orderSelected.delivery_precio
-                                      ).toFixed(2)}`,
-                                      fontSize: 10,
-                                      alignment: "right",
-                                    },
-                                  ],
-                                  margin: [0, 0, 0, 5],
-                                },
-                              ]
+                              {
+                                columns: [
+                                  { text: "Delivery", fontSize: 10 },
+                                  {
+                                    text: `S/. ${parseFloat(
+                                      orderSelected.delivery_precio
+                                    ).toFixed(2)}`,
+                                    fontSize: 10,
+                                    alignment: "right",
+                                  },
+                                ],
+                                margin: [0, 0, 0, 5],
+                              },
+                            ]
                             : []),
 
                           {
@@ -875,16 +869,15 @@ export default function Pedidos({ window }) {
 
                     // here
                   }}
-                  className={`py-4 rounded-[15px] w-full ${
-                    totalPagado >=
+                  className={`py-4 rounded-[15px] w-full ${totalPagado >=
                     orderSelected.lista_productos?.reduce(
                       (a, b) => a + b.precio,
                       0
                     ) +
-                      parseFloat(orderSelected.delivery_precio)
-                      ? "bg-[#ffa600] cursor-pointer"
-                      : "bg-[#e0e0e0] pointer-events-none"
-                  } text-white font-bold text-[20px] cursor-pointer`}
+                    parseFloat(orderSelected.delivery_precio)
+                    ? "bg-[#ffa600] cursor-pointer"
+                    : "bg-[#e0e0e0] pointer-events-none"
+                    } text-white font-bold text-[20px] cursor-pointer`}
                 >
                   Confirmar Pago
                 </button>
@@ -901,11 +894,10 @@ export default function Pedidos({ window }) {
 
               <button
                 onClick={toggleDelTab}
-                className={`p-2 rounded-[10px] flex ${
-                  orderSelected.pay_confirm === true
-                    ? "bg-[#e0e0e0] text-[#00000050] pointer-events-none"
-                    : "bg-[#ff333330] text-[#ff3333]"
-                } font-[800] cursor-pointer hover:bg-[#ff333350] transition-all duration-200`}
+                className={`p-2 rounded-[10px] flex ${orderSelected.pay_confirm === true
+                  ? "bg-[#e0e0e0] text-[#00000050] pointer-events-none"
+                  : "bg-[#ff333330] text-[#ff3333]"
+                  } font-[800] cursor-pointer hover:bg-[#ff333350] transition-all duration-200`}
               >
                 <IconTrashOff stroke={2} size={30} />
               </button>
@@ -942,17 +934,15 @@ export default function Pedidos({ window }) {
               })}
               <button
                 onClick={toggleAddMenu}
-                className={`flex gap-[10px] font-bold items-center justify-center w-full cursor-pointer ${
-                  orderSelected.pay_confirm === true ? "hidden" : "flex"
-                } bg-[#ffa600] text-white text-[20px] rounded-[10px] py-3 active:bg-[#f59f00] transition-all ease-in-out duration-200 mt-2`}
+                className={`flex gap-[10px] font-bold items-center justify-center w-full cursor-pointer ${orderSelected.pay_confirm === true ? "hidden" : "flex"
+                  } bg-[#ffa600] text-white text-[20px] rounded-[10px] py-3 active:bg-[#f59f00] transition-all ease-in-out duration-200 mt-2`}
               >
                 <IconPlus stroke={3} /> Agregar Producto
               </button>
               <div className="relative">
                 <ul
-                  className={`absolute top-0 left-0 w-full overflow-hidden overflow-y-auto bg-white rounded-[10px] shadow-[0_0_20px_#00000010] ${
-                    addMenu ? "max-h-[250px]" : "max-h-0 opacity-0"
-                  } mt-3 p-3 flex flex-col gap-3 transition-all ease-in-out duration-300`}
+                  className={`absolute top-0 left-0 w-full overflow-hidden overflow-y-auto bg-white rounded-[10px] shadow-[0_0_20px_#00000010] ${addMenu ? "max-h-[250px]" : "max-h-0 opacity-0"
+                    } mt-3 p-3 flex flex-col gap-3 transition-all ease-in-out duration-300`}
                 >
                   {prods.map((prod) => {
                     return (
@@ -978,9 +968,8 @@ export default function Pedidos({ window }) {
               </div>
 
               <div
-                className={`fixed top-50 mx-auto left-0 right-0 bg-white rounded-[20px] max-w-[350px] shadow-[0_0_30px_#00000020] p-3 transition-all ease-in-out duration-300 ${
-                  del ? "scale-100" : "scale-50 opacity-0 pointer-events-none"
-                }`}
+                className={`fixed top-50 mx-auto left-0 right-0 bg-white rounded-[20px] max-w-[350px] shadow-[0_0_30px_#00000020] p-3 transition-all ease-in-out duration-300 ${del ? "scale-100" : "scale-50 opacity-0 pointer-events-none"
+                  }`}
               >
                 <p className="text-center text-[25px] text-[#ff3333] font-[800] mb-7">
                   Eliminar Pedido
@@ -1022,180 +1011,182 @@ export default function Pedidos({ window }) {
 
               <div className="flex flex-col gap-3 justify-center mt-6">
                 <button
-  onClick={() => {
-    const precioExtras = {
-      Chorizo: 4.0,
-      Tocino: 2.0,
-      Queso: 2.0,
-      Huevo: 2.0,
-      Piña: 2.0,
-    }
+                  onClick={() => {
+                    const precioExtras = {
+                      Chorizo: 4.0,
+                      Tocino: 2.0,
+                      Queso: 2.0,
+                      Huevo: 2.0,
+                      Piña: 2.0,
+                    };
 
-    
-    const fecha = new Date();
-const hora = fecha.toLocaleTimeString([], {
-  hour: "2-digit",
-  minute: "2-digit",
-});
-const cliente = orderSelected.nombre || "Cliente";
+                    const fecha = new Date();
+                    const hora = fecha.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    const cliente = orderSelected.nombre;
 
-let total = 0;
+                    let total = 0;
+                    let sumaExtras = 0;
 
-const productosFormateados = orderSelected.lista_productos.map((prod, index) => {
-  const detalles = [];
+                    const productosFormateados = orderSelected.lista_productos.map((prod, index) => {
+                      const detalles = [];
 
-  const precioBase = prod.precio || 0;
+                      const precioBase = prod.precioBase || 0;
+                      let totalExtrasProd = 0;
 
-  // Mostrar vegetales (sin precio)
-  if (prod.vegetalesSeleccionados?.length) {
-    detalles.push({
-      text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
-      fontSize: 10,
-      margin: [0, 0, 0, 3],
-    });
-  }
+                      // Mostrar vegetales (sin precio)
+                      if (prod.vegetalesSeleccionados?.length) {
+                        detalles.push({
+                          text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
+                          fontSize: 10,
+                          margin: [0, 0, 0, 3],
+                        });
+                      }
 
-  // Mostrar salsas (sin precio)
-  if (prod.salsasSeleccionadas?.length) {
-    detalles.push({
-      text: `• Salsas: ${prod.salsasSeleccionadas.join(", ")}`,
-      fontSize: 10,
-      margin: [0, 0, 0, 3],
-    });
-  }
+                      // Mostrar salsas (sin precio)
+                      if (prod.salsasSeleccionadas?.length) {
+                        detalles.push({
+                          text: `• Salsas: ${prod.salsasSeleccionadas.join(", ")}`,
+                          fontSize: 10,
+                          margin: [0, 0, 0, 3],
+                        });
+                      }
 
-  // Mostrar extras con precio
-  let sumaExtras = 0;
-  if (prod.extrasSeleccionados?.length) {
-    detalles.push({
-      text: "• Extras:",
-      fontSize: 10,
-      margin: [0, 2, 0, 0],
-    });
+                      // Mostrar extras con precio
+                      if (prod.extrasSeleccionados?.length) {
+                        detalles.push({
+                          text: "• Extras:",
+                          fontSize: 10,
+                          margin: [0, 2, 0, 0],
+                        });
 
-    prod.extrasSeleccionados.forEach((extra) => {
-      const precio = precioExtras[extra] || 0;
-      sumaExtras += precio;
-      detalles.push({
-        text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
-        fontSize: 10,
-        margin: [0, 0, 0, 0],
-      });
-    });
+                        prod.extrasSeleccionados.forEach((extra) => {
+                          const precio = precioExtras[extra] || 0;
+                          totalExtrasProd += precio;
 
-    detalles.push({ text: "", margin: [0, 0, 0, 5] }); // Espacio extra si deseas separar productos
-  }
+                          detalles.push({
+                            text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
+                            fontSize: 10,
+                            margin: [0, 0, 0, 0],
+                          });
+                        });
 
-  const precioTotalProducto = precioBase + sumaExtras;
-  total += precioTotalProducto;
+                        detalles.push({ text: "", margin: [0, 0, 0, 5] });
+                      }
 
-  return {
-    columns: [
-      {
-        stack: [
-          {
-            text: prod.nombre,
-            bold: true,
-            fontSize: 13,
-            margin: [0, 0, 0, 3],
-          },
-          ...detalles,
-        ],
-        width: "*",
-      },
-      {
-        text: `S/ ${precioTotalProducto.toFixed(2)}`,
-        alignment: "right",
-        fontSize: 10,
-        width: "50",
-        bold: true,
-      },
-    ],
-    margin: [0, 0, 0, 10],
-  };
-});
+                      const precioTotalProducto = precioBase;
+                      total += precioBase;
+                      sumaExtras += totalExtrasProd;
 
-// Nota adicional si hay
-const nota = orderSelected.notas
-  ? [
-      {
-        text: "NOTA:",
-        bold: true,
-        margin: [0, 20, 0, 5],
-        fontSize: 12,
-      },
-      {
-        text: orderSelected.notas,
-        fontSize: 12,
-      },
-    ]
-  : [];
+                      return {
+                        columns: [
+                          {
+                            stack: [
+                              {
+                                text: prod.nombre,
+                                bold: true,
+                                fontSize: 13,
+                                margin: [0, 0, 0, 3],
+                              },
+                              ...detalles,
+                            ],
+                            width: "*",
+                          },
+                          {
+                            text: `S/ ${precioTotalProducto.toFixed(2)}`,
+                            alignment: "right",
+                            fontSize: 10,
+                            width: "50",
+                            bold: true,
+                          },
+                        ],
+                        margin: [0, 0, 0, 10],
+                      };
+                    });
 
-// Calcular delivery y total final
-const deliveryPrecio = parseFloat(orderSelected.delivery_precio || 0);
-const totalFinal = total + deliveryPrecio;
+                    const nota = orderSelected.notas
+                      ? [
+                        {
+                          text: "NOTA:",
+                          bold: true,
+                          margin: [0, 20, 0, 5],
+                          fontSize: 12,
+                        },
+                        {
+                          text: orderSelected.notas,
+                          fontSize: 12,
+                        },
+                      ]
+                      : [];
 
-const docDefinition = {
-  pageSize: {
-    width: 165, // 58 mm
-    height: "auto",
-  },
-  pageMargins: [10, 10, 10, 10],
-  content: [
-    {
-      text: `PEDIDO #${orderSelected.id}`,
-      alignment: "center",
-      fontSize: 18,
-      bold: true,
-      margin: [0, 0, 0, 10],
-    },
-    { text: `Hora: ${hora}`, fontSize: 10 },
-    {
-      text: `Cliente: ${cliente}`,
-      fontSize: 10,
-      margin: [0, 0, 0, 3],
-    },
-    {
-      text: `${orderSelected.tipo_pedido}`,
-      fontSize: 11,
-      bold: true,
-      margin: [0, 0, 0, 10],
-    },
-    ...productosFormateados,
-    ...nota,
-    ...(deliveryPrecio > 0
-      ? [
-          {
-            text: `Delivery: S/ ${deliveryPrecio.toFixed(2)}`,
-            alignment: "right",
-            fontSize: 11,
-            margin: [0, 10, 0, 0],
-          },
-        ]
-      : []),
-    {
-      text: `TOTAL: S/ ${totalFinal.toFixed(2)}`,
-      bold: true,
-      alignment: "right",
-      fontSize: 14,
-      margin: [0, 10, 0, 0],
-    },
-  ],
-};
+                    const deliveryPrecio = parseFloat(orderSelected.delivery_precio || 0);
+                    const totalFinal = total + sumaExtras + deliveryPrecio;
 
-pdfMake.createPdf(docDefinition).open(); }}
-          
-  className="bg-[#ffa600] active:bg-[ffa60080] py-3 text-white text-[20px] rounded w-full transition"
->
-  Generar Comanda
-</button>
+                    const docDefinition = {
+                      pageSize: {
+                        width: 165,
+                        height: "auto",
+                      },
+                      pageMargins: [10, 10, 10, 10],
+                      content: [
+                        {
+                          text: `PEDIDO #${orderSelected.id}`,
+                          alignment: "center",
+                          fontSize: 18,
+                          bold: true,
+                          margin: [0, 0, 0, 10],
+                        },
+                        { text: `Hora: ${hora}`, fontSize: 10 },
+                        {
+                          text: `Cliente: ${cliente}`,
+                          fontSize: 10,
+                          margin: [0, 0, 0, 3],
+                        },
+                        {
+                          text: `${orderSelected.tipo_pedido}`,
+                          fontSize: 11,
+                          bold: true,
+                          margin: [0, 0, 0, 10],
+                        },
+                        ...productosFormateados,
+                        ...nota,
+                        ...(deliveryPrecio > 0
+                          ? [
+                            {
+                              text: `Delivery: S/ ${deliveryPrecio.toFixed(2)}`,
+                              alignment: "right",
+                              fontSize: 11,
+                              margin: [0, 10, 0, 0],
+                            },
+                          ]
+                          : []),
+                        {
+                          text: `TOTAL: S/ ${totalFinal.toFixed(2)}`,
+                          bold: true,
+                          alignment: "right",
+                          fontSize: 14,
+                          margin: [0, 10, 0, 0],
+                        },
+                      ],
+                    };
+
+                    pdfMake.createPdf(docDefinition).open();
+                    console.log(totalFinal);
+                  }}
+
+
+                  className="bg-[#ffa600] active:bg-[ffa60080] py-3 text-white text-[20px] rounded w-full transition"
+                >
+                  Generar Comanda
+                </button>
                 <button
                   onClick={() => setConfirmPaymentMenu(true)}
-                  className={`${
-                    orderSelected.pay_confirm === true
-                      ? "bg-[#e0e0e0] text-white pointer-events-none"
-                      : "bg-[#ffa60030]"
-                  } py-4 rounded-[10px] text-[20px] text-[#ffa600] font-bold cursor-pointer hover:bg-[#ffa60050] transition-all duraiton-200`}
+                  className={`${orderSelected.pay_confirm === true
+                    ? "bg-[#e0e0e0] text-white pointer-events-none"
+                    : "bg-[#ffa60030]"
+                    } py-4 rounded-[10px] text-[20px] text-[#ffa600] font-bold cursor-pointer hover:bg-[#ffa60050] transition-all duraiton-200`}
                 >
                   Confirmar Pago
                 </button>
@@ -1247,35 +1238,31 @@ pdfMake.createPdf(docDefinition).open(); }}
                   <div className="flex flex-col gap-[10px]">
                     <div className="flex gap-[10px] items-center justify-end">
                       <div
-                        className={`w-[10px] h-[10px] ${
-                          order.pay_confirm === true
-                            ? "bg-[#26ce6c]"
-                            : "bg-[#ff3333]"
-                        } rounded-full`}
+                        className={`w-[10px] h-[10px] ${order.pay_confirm === true
+                          ? "bg-[#26ce6c]"
+                          : "bg-[#ff3333]"
+                          } rounded-full`}
                       ></div>
                       {order.pay_confirm === true ? "Pagado" : "No Pagado"}
                     </div>
                     <div className="flex gap-[5px] items-center flex-wrap justify-end">
                       <p
-                        className={`${
-                          order.pay_method_1 === "Efectivo" ? "block" : "hidden"
-                        } uppercase text-end font-bold py-1 px-2 bg-[#00000010] rounded-full text-[15px] md:text-[11px] md:px-1 md:py-0.5`}
+                        className={`${order.pay_method_1 === "Efectivo" ? "block" : "hidden"
+                          } uppercase text-end font-bold py-1 px-2 bg-[#00000010] rounded-full text-[15px] md:text-[11px] md:px-1 md:py-0.5`}
                       >
                         Efectivo
                       </p>
                       <p
-                        className={`${
-                          order.pay_method_2 === "Yape/Plin"
-                            ? "block"
-                            : "hidden"
-                        } uppercase text-end font-bold py-1 px-2 bg-[#00000010] rounded-full text-[15px] md:text-[11px] md:px-1 md:py-0.5`}
+                        className={`${order.pay_method_2 === "Yape/Plin"
+                          ? "block"
+                          : "hidden"
+                          } uppercase text-end font-bold py-1 px-2 bg-[#00000010] rounded-full text-[15px] md:text-[11px] md:px-1 md:py-0.5`}
                       >
                         Yape/Plin
                       </p>
                       <p
-                        className={`${
-                          order.pay_method_3 === "Tarjeta" ? "block" : "hidden"
-                        } uppercase text-end font-bold py-1 px-2 bg-[#00000010] rounded-full text-[15px] md:text-[11px] md:px-1 md:py-0.5`}
+                        className={`${order.pay_method_3 === "Tarjeta" ? "block" : "hidden"
+                          } uppercase text-end font-bold py-1 px-2 bg-[#00000010] rounded-full text-[15px] md:text-[11px] md:px-1 md:py-0.5`}
                       >
                         Tarjeta
                       </p>

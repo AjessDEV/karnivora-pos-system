@@ -668,20 +668,20 @@ export default function Ventas() {
 
           ...(orderSelected.delivery_precio
             ? [
-                {
-                  columns: [
-                    { text: "Delivery", fontSize: 10 },
-                    {
-                      text: `S/. ${parseFloat(
-                        orderSelected.delivery_precio
-                      ).toFixed(2)}`,
-                      fontSize: 10,
-                      alignment: "right",
-                    },
-                  ],
-                  margin: [0, 0, 0, 5],
-                },
-              ]
+              {
+                columns: [
+                  { text: "Delivery", fontSize: 10 },
+                  {
+                    text: `S/. ${parseFloat(
+                      orderSelected.delivery_precio
+                    ).toFixed(2)}`,
+                    fontSize: 10,
+                    alignment: "right",
+                  },
+                ],
+                margin: [0, 0, 0, 5],
+              },
+            ]
             : []),
 
           {
@@ -965,18 +965,20 @@ export default function Ventas() {
     // Nota adicional si hay
     const nota = pedido.notas
       ? [
-          {
-            text: "NOTA:",
-            bold: true,
-            margin: [0, 20, 0, 5],
-            fontSize: 12,
-          },
-          {
-            text: pedido.notas,
-            fontSize: 12,
-          },
-        ]
+        {
+          text: "NOTA:",
+          bold: true,
+          margin: [0, 20, 0, 5],
+          fontSize: 12,
+        },
+        {
+          text: pedido.notas,
+          fontSize: 12,
+        },
+      ]
       : [];
+
+    const deliveryPrecio = parseFloat(pedido.delivery_precio || 0);
 
     // Documento PDF
     const docDefinition = {
@@ -1007,6 +1009,16 @@ export default function Ventas() {
         },
         ...productosFormateados,
         ...nota,
+        ...(deliveryPrecio > 0
+          ? [
+            {
+              text: `Delivery: S/ ${deliveryPrecio.toFixed(2)}`,
+              alignment: "right",
+              fontSize: 11,
+              margin: [0, 10, 0, 0],
+            },
+          ]
+          : []),
         {
           text: `TOTAL: S/ ${(total + parseFloat(pedido.delivery_precio || 0)).toFixed(2)}`,
           bold: true,
@@ -1191,21 +1203,19 @@ export default function Ventas() {
         <div className="flex gap-[10px] items-center mt-2 mb-10 w-full">
           <button
             onClick={() => setSellWindow("Productos")}
-            className={`w-full border-3 ${
-              sellWindow === "Productos"
+            className={`w-full border-3 ${sellWindow === "Productos"
                 ? "border-[#ffa600] bg-[#ffa600] text-white"
                 : "border-[#e0e0e0] bg-[#eeeeee]"
-            } py-2 rounded-[10px] text-[20px] font-bold transition-all ease-in-out duration-200 cursor-pointer hover:border-[#ffa600]`}
+              } py-2 rounded-[10px] text-[20px] font-bold transition-all ease-in-out duration-200 cursor-pointer hover:border-[#ffa600]`}
           >
             Productos
           </button>
           <button
             onClick={() => setSellWindow("Pedidos")}
-            className={`w-full border-3 ${
-              sellWindow === "Pedidos"
+            className={`w-full border-3 ${sellWindow === "Pedidos"
                 ? "border-[#ffa600] bg-[#ffa600] text-white"
                 : "border-[#e0e0e0] bg-[#eeeeee]"
-            } py-2 rounded-[10px] text-[20px] font-bold transition-all ease-in-out duration-200 cursor-pointer hover:border-[#ffa600]`}
+              } py-2 rounded-[10px] text-[20px] font-bold transition-all ease-in-out duration-200 cursor-pointer hover:border-[#ffa600]`}
           >
             Pedidos
           </button>
@@ -1213,22 +1223,20 @@ export default function Ventas() {
             onClick={() => {
               setSellWindow("Caja");
             }}
-            className={`w-full border-3 ${
-              sellWindow === "Caja"
+            className={`w-full border-3 ${sellWindow === "Caja"
                 ? "border-[#ffa600] bg-[#ffa600] text-white"
                 : "border-[#e0e0e0] bg-[#eeeeee]"
-            } py-2 rounded-[10px] text-[20px] font-bold transition-all ease-in-out duration-200 cursor-pointer hover:border-[#ffa600]`}
+              } py-2 rounded-[10px] text-[20px] font-bold transition-all ease-in-out duration-200 cursor-pointer hover:border-[#ffa600]`}
           >
             Caja
           </button>
         </div>
 
         <div
-          className={`z-101 p-[50px_20px_15px_20px] w-full max-h-[85%] ${
-            addProductMenu
+          className={`z-101 p-[50px_20px_15px_20px] w-full max-h-[85%] ${addProductMenu
               ? "bottom-0 opacity-100"
               : "bottom-[-100%] opacity-0 pointer-events-none"
-          } rounded-t-[50px] fixed bottom-0 left-0 md:max-w-[700px] md:right-0 md:mx-auto bg-white flex flex-col justify-between items-center transition-all ease-in-out duration-500`}
+            } rounded-t-[50px] fixed bottom-0 left-0 md:max-w-[700px] md:right-0 md:mx-auto bg-white flex flex-col justify-between items-center transition-all ease-in-out duration-500`}
         >
           <h2 className="text-center absolute top-[-20px] bg-[#ffa600] text-white text-[30px] font-[800] p-[5px_10px] rounded-[20px] shadow-[0_20px_30px_#ffa60025]">
             Nuevo Producto
@@ -1255,11 +1263,10 @@ export default function Ventas() {
                 >
                   {currency} <IconChevronDown stroke={2} size={20} />
                   <ul
-                    className={`z-10 absolute ${
-                      currencyMenu
+                    className={`z-10 absolute ${currencyMenu
                         ? "max-h-[100px] opacity-100"
                         : "max-h-0 opacity-0 pointer-events-none"
-                    } w-full overflow-y-auto left-0 top-[50px] bg-white shadow-[0_10px_20px_#00000020] p-[8px_10px] flex flex-col gap-[10px] rounded-[10px] transition-all ease-in-out duration-200 overflow-hidden`}
+                      } w-full overflow-y-auto left-0 top-[50px] bg-white shadow-[0_10px_20px_#00000020] p-[8px_10px] flex flex-col gap-[10px] rounded-[10px] transition-all ease-in-out duration-200 overflow-hidden`}
                   >
                     <li
                       onClick={() => setCurrency("S/.")}
@@ -1290,11 +1297,10 @@ export default function Ventas() {
                 >
                   {category} <IconChevronDown stroke={2} size={20} />
                   <ul
-                    className={`z-10 absolute ${
-                      categoryMenu
+                    className={`z-10 absolute ${categoryMenu
                         ? "max-h-[150px] opacity-100"
                         : "max-h-0 opacity-0 pointer-events-none"
-                    } w-full overflow-y-auto left-0 top-[50px] bg-white shadow-[0_10px_20px_#00000020] p-[8px_10px] flex flex-col gap-[10px] rounded-[10px] transition-all ease-in-out duration-200 overflow-hidden`}
+                      } w-full overflow-y-auto left-0 top-[50px] bg-white shadow-[0_10px_20px_#00000020] p-[8px_10px] flex flex-col gap-[10px] rounded-[10px] transition-all ease-in-out duration-200 overflow-hidden`}
                   >
                     <li
                       onClick={() => setCategory("Hamburguesas")}
@@ -1343,11 +1349,10 @@ export default function Ventas() {
               </p>
               <div
                 onClick={toggleTooltip}
-                className={`z-10 fixed max-w-[340px] mx-auto bg-[#eeeeee] border-4 border-[#ffa600] rounded-[20px] shadow-[0_0_30px_#00000060] left-0 right-0 ${
-                  tooltip
+                className={`z-10 fixed max-w-[340px] mx-auto bg-[#eeeeee] border-4 border-[#ffa600] rounded-[20px] shadow-[0_0_30px_#00000060] left-0 right-0 ${tooltip
                     ? "bottom-[50%] opacity-100 pointer-events-all"
                     : "bottom-[60%] opacity-0 pointer-events-none"
-                } p-[20px] text-center transition-all ease-in-out duration-200`}
+                  } p-[20px] text-center transition-all ease-in-out duration-200`}
               >
                 <h2 className="font-[800] text-[25px] mb-[10px]">
                   Conectar al Inventario
@@ -1382,18 +1387,17 @@ export default function Ventas() {
                   />
                 </div>
                 <ul
-                  className={`z-10 absolute ${
-                    connectionMenu.trim() !== ""
+                  className={`z-10 absolute ${connectionMenu.trim() !== ""
                       ? "max-h-[120px] opacity-100"
                       : "max-h-0 opacity-0 pointer-events-none"
-                  } w-full overflow-y-auto left-0 top-[50px] bg-white shadow-[0_10px_20px_#00000020] p-[8px_10px] flex flex-col gap-[10px] rounded-[10px] transition-all ease-in-out duration-200 overflow-hidden`}
+                    } w-full overflow-y-auto left-0 top-[50px] bg-white shadow-[0_10px_20px_#00000020] p-[8px_10px] flex flex-col gap-[10px] rounded-[10px] transition-all ease-in-out duration-200 overflow-hidden`}
                 >
                   {Array.isArray(items) &&
-                  items.filter((item) =>
-                    item.nombre
-                      .toLowerCase()
-                      .includes(connectionMenu.toLowerCase())
-                  ).length > 0 ? (
+                    items.filter((item) =>
+                      item.nombre
+                        .toLowerCase()
+                        .includes(connectionMenu.toLowerCase())
+                    ).length > 0 ? (
                     items
                       .filter((item) =>
                         item.nombre
@@ -1462,11 +1466,10 @@ export default function Ventas() {
           <Caja window={sellWindow} />
 
           <div
-            className={`w-full absolute ${
-              sellWindow === "Productos"
+            className={`w-full absolute ${sellWindow === "Productos"
                 ? "opacity-100 top-0"
                 : "opacity-0 top-[100px] pointer-events-none"
-            } left-0 flex gap-[20px] flex-wrap pb-[120px] justify-center transition-all ease-in-out duration-200 md:flex-col`}
+              } left-0 flex gap-[20px] flex-wrap pb-[120px] justify-center transition-all ease-in-out duration-200 md:flex-col`}
           >
             <h2 className="text-[30px] font-bold text-center">Productos</h2>
 
@@ -1486,11 +1489,10 @@ export default function Ventas() {
                 <button
                   key={categoria}
                   onClick={() => toggleCategory(categoria)}
-                  className={`font-bold text-[18px] px-2 py-1 border-[#ffa600] border-3 cursor-pointer hover:scale-[0.9] ${
-                    selectedCategories.includes(categoria)
+                  className={`font-bold text-[18px] px-2 py-1 border-[#ffa600] border-3 cursor-pointer hover:scale-[0.9] ${selectedCategories.includes(categoria)
                       ? "bg-[#ffa600] text-white font-bold"
                       : "bg-none"
-                  } rounded-full transition-all ease-in-out duration-200`}
+                    } rounded-full transition-all ease-in-out duration-200`}
                 >
                   {categoria}
                 </button>
@@ -1530,11 +1532,10 @@ export default function Ventas() {
             </div>
 
             <div
-              className={`z-10 fixed ${
-                selectedProducts.length > 0
+              className={`z-10 fixed ${selectedProducts.length > 0
                   ? "bottom-[120px] md:bottom-[25px]"
                   : "bottom-0 opacity-0"
-              } flex justify-end items-center w-full px-4 transition-all ease-in-out duration-300 md:left-auto md:right-0 md:pl-[300px] md:px-0`}
+                } flex justify-end items-center w-full px-4 transition-all ease-in-out duration-300 md:left-auto md:right-0 md:pl-[300px] md:px-0`}
             >
               <div className="min-w-[400px] mx-auto p-[20px_15px] h-[90px] bg-[#eeeeee] border-3 border-[#00000020] shadow-[0_10px_25px_#00000020] rounded-[20px] flex items-center justify-between md:mx-0 md:mr-5 md:">
                 <div>
@@ -1558,9 +1559,8 @@ export default function Ventas() {
 
           {/* select payment screen */}
           <div
-            className={`fixed overflow-y-auto pb-[20px] z-102 top-0 ${
-              paymentMenu ? "left-0" : "left-full"
-            } bg-white size-full p-[10px_20px] transition-all ease-in-out duration-300`}
+            className={`fixed overflow-y-auto pb-[20px] z-102 top-0 ${paymentMenu ? "left-0" : "left-full"
+              } bg-white size-full p-[10px_20px] transition-all ease-in-out duration-300`}
           >
             <div className="w-full flex gap-[15px] items-center mb-4">
               <button onClick={togglePaymentMenu}>
@@ -1587,33 +1587,30 @@ export default function Ventas() {
             <div className="flex w-full gap-[10px] my-2 md:max-w-[700px] md:mx-auto">
               <button
                 onClick={toggleCashMethod}
-                className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${
-                  cashMethod
+                className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${cashMethod
                     ? "border-[#ffa600] bg-[#ffa600] text-white"
                     : "border-[#e0e0e0]"
-                } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
+                  } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
               >
                 <IconCash size={40} stroke={2} />
                 Efectivo
               </button>
               <button
                 onClick={toggleEWalletMethod}
-                className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${
-                  eWalletMethod
+                className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${eWalletMethod
                     ? "border-[#ffa600] bg-[#ffa600] text-white"
                     : "border-[#e0e0e0]"
-                } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
+                  } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
               >
                 <IconQrcode size={40} stroke={2} />
                 Yape/Plin
               </button>
               <button
                 onClick={toggleCardMethod}
-                className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${
-                  cardMethod
+                className={`w-full px-2 py-1 flex flex-col items-center gap-[5px] font-bold text-[20px] border-4 hover:border-[#ffa600] cursor-pointer ${cardMethod
                     ? "border-[#ffa600] bg-[#ffa600] text-white"
                     : "border-[#e0e0e0]"
-                } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
+                  } rounded-[15px] transition-all ease-in-out duration-200 active:scale-[0.9]`}
               >
                 <IconCreditCardFilled size={40} />
                 Tarjeta
@@ -1668,11 +1665,10 @@ export default function Ventas() {
             <div className="md:max-w-[700px] md:mx-auto">
               <button
                 onClick={handleOrder}
-                className={`py-4 rounded-[15px] w-full ${
-                  totalPagado >= totalConDelivery
+                className={`py-4 rounded-[15px] w-full ${totalPagado >= totalConDelivery
                     ? "bg-[#ffa600] cursor-pointer"
                     : "bg-[#e0e0e0] pointer-events-none"
-                } text-white font-bold text-[20px]`}
+                  } text-white font-bold text-[20px]`}
               >
                 Realizar Pedido
               </button>
@@ -1680,9 +1676,8 @@ export default function Ventas() {
           </div>
           {/* create order screen */}
           <div
-            className={`fixed overflow-y-auto pb-[20px] z-101 top-0 ${
-              orderSummary ? "left-0 md:left-[50%]" : "left-full"
-            } bg-white size-full p-[10px_20px] transition-all ease-in-out duration-300 md:h-full md:w-[50%]`}
+            className={`fixed overflow-y-auto pb-[20px] z-101 top-0 ${orderSummary ? "left-0 md:left-[50%]" : "left-full"
+              } bg-white size-full p-[10px_20px] transition-all ease-in-out duration-300 md:h-full md:w-[50%]`}
           >
             <div className="w-full flex gap-[15px] items-center mb-4">
               <button onClick={toggleOrderMenu} className="cursor-pointer">
@@ -1693,31 +1688,28 @@ export default function Ventas() {
             <div className="mb-7 flex gap-[10px] justify-between">
               <button
                 onClick={() => setOrderType("Mesa")}
-                className={`w-full py-2 text-[18px] border-3 cursor-pointer ${
-                  orderType === "Mesa"
+                className={`w-full py-2 text-[18px] border-3 cursor-pointer ${orderType === "Mesa"
                     ? "border-[#ffa600] bg-[#ffa600] text-white"
                     : "border-[#e0e0e0]"
-                } rounded-[10px] font-bold transition-all ease-in-out duration-200`}
+                  } rounded-[10px] font-bold transition-all ease-in-out duration-200`}
               >
                 Mesa
               </button>
               <button
                 onClick={() => setOrderType("Para llevar")}
-                className={`w-full py-2 text-[18px] border-3 cursor-pointer ${
-                  orderType === "Para llevar"
+                className={`w-full py-2 text-[18px] border-3 cursor-pointer ${orderType === "Para llevar"
                     ? "border-[#ffa600] bg-[#ffa600] text-white"
                     : "border-[#e0e0e0]"
-                } rounded-[10px] font-bold transition-all ease-in-out duration-200`}
+                  } rounded-[10px] font-bold transition-all ease-in-out duration-200`}
               >
                 Para Llevar
               </button>
               <button
                 onClick={() => setOrderType("delivery")}
-                className={`w-full py-2 text-[18px] border-3 cursor-pointer ${
-                  orderType === "delivery"
+                className={`w-full py-2 text-[18px] border-3 cursor-pointer ${orderType === "delivery"
                     ? "border-[#ffa600] bg-[#ffa600] text-white"
                     : "border-[#e0e0e0]"
-                } rounded-[10px] font-bold transition-all ease-in-out duration-200`}
+                  } rounded-[10px] font-bold transition-all ease-in-out duration-200`}
               >
                 Delivery
               </button>
@@ -1728,11 +1720,10 @@ export default function Ventas() {
                   <div className="flex items-center justify-between w-full">
                     <div
                       onClick={() => deployOrderItemMenu(index)}
-                      className={`rounded-[10px] shadow-[0_0_20px_#00000015] p-4 w-full cursor-pointer ${
-                        orderItem.includes(index)
+                      className={`rounded-[10px] shadow-[0_0_20px_#00000015] p-4 w-full cursor-pointer ${orderItem.includes(index)
                           ? "max-h-[730px]"
                           : "max-h-[85px]"
-                      } overflow-hidden transition-all duration-300`}
+                        } overflow-hidden transition-all duration-300`}
                     >
                       <p className="text-[23px] font-bold">{product.nombre}</p>
                       <p className="text-[15px] text-[#8a8a8a] font-bold">
@@ -1761,11 +1752,10 @@ export default function Ventas() {
                                   vegetal
                                 );
                               }}
-                              className={`${
-                                product.vegetalesSeleccionados.includes(vegetal)
+                              className={`${product.vegetalesSeleccionados.includes(vegetal)
                                   ? "border-[#ffa600] bg-[#ffa600] font-bold text-white"
                                   : "border-[#e0e0e0] bg-none"
-                              } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
+                                } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
                             >
                               {vegetal}
                             </button>
@@ -1792,11 +1782,10 @@ export default function Ventas() {
                                 e.stopPropagation();
                                 toggleItem(index, "salsasSeleccionadas", salsa);
                               }}
-                              className={`${
-                                product.salsasSeleccionadas.includes(salsa)
+                              className={`${product.salsasSeleccionadas.includes(salsa)
                                   ? "border-[#ffa600] bg-[#ffa600] font-bold text-white"
                                   : "border-[#e0e0e0] bg-none"
-                              } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
+                                } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
                             >
                               {salsa}
                             </button>
@@ -1818,11 +1807,10 @@ export default function Ventas() {
                                     extra
                                   );
                                 }}
-                                className={`${
-                                  product.extrasSeleccionados.includes(extra)
+                                className={`${product.extrasSeleccionados.includes(extra)
                                     ? "border-[#ffa600] bg-[#ffa600] font-bold text-white"
                                     : "border-[#e0e0e0] bg-none"
-                                } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
+                                  } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
                               >
                                 {extra}
                               </button>
@@ -1839,11 +1827,10 @@ export default function Ventas() {
                               e.stopPropagation();
                               togglePromotion(index);
                             }}
-                            className={`${
-                              product.isPromotion
+                            className={`${product.isPromotion
                                 ? "border-[#ffa600] bg-[#ffa600] font-bold text-white"
                                 : "border-[#e0e0e0] bg-none"
-                            } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
+                              } border-2 border-[#e0e0e0] rounded-[10px] py-1 px-2 transition-all ease-in-out duration-200 cursor-pointer`}
                           >
                             Es Promocion
                           </button>
@@ -1900,21 +1887,19 @@ export default function Ventas() {
               <div className="flex gap-[10px] justify-center w-full">
                 <button
                   onClick={togglePaymentMenu}
-                  className={`text-[23px] text-white cursor-pointer w-full ${
-                    selectedProducts.length > 0
+                  className={`text-[23px] text-white cursor-pointer w-full ${selectedProducts.length > 0
                       ? "bg-[#ffa600]"
                       : "bg-[#e0e0e0] pointer-events-none"
-                  } font-bold rounded-[15px] py-3 transition-all duration-200`}
+                    } font-bold rounded-[15px] py-3 transition-all duration-200`}
                 >
                   Continuar al Pago
                 </button>
                 <button
                   onClick={handleOrderWithoutPay}
-                  className={`text-[23px] text-black border-3 border-[#ffa600] cursor-pointer w-full ${
-                    selectedProducts.length > 0
+                  className={`text-[23px] text-black border-3 border-[#ffa600] cursor-pointer w-full ${selectedProducts.length > 0
                       ? "bg-[#fff]"
                       : "bg-[#e0e0e0] pointer-events-none text-white border-[#fff]"
-                  } font-bold rounded-[15px] py-3 transition-all duration-200`}
+                    } font-bold rounded-[15px] py-3 transition-all duration-200`}
                 >
                   Pago Pendiente
                 </button>

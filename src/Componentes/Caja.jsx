@@ -20,7 +20,8 @@ export default function Caja({ window }) {
 
   const [newStartingCash, setNewStartingCash] = useState(0);
 
-  const [endCash, setEndCash] = useState(startingCash);
+  const [adjustments, setAdjustments] = useState(0);
+  const endCash = startingCash + adjustments;
 
   useEffect(() => {
     localStorage.setItem("finCaja", endCash.toString());
@@ -39,7 +40,11 @@ export default function Caja({ window }) {
   const [decreaseReason, setDecreaseReason] = useState("");
 
   function decreaseCash() {
-    setEndCash(endCash - parseFloat(decreasedCash));
+    const monto = parseFloat(decreasedCash);
+    if (isNaN(monto)) return;
+
+    // Actualiza los ajustes (resta dinero)
+    setAdjustments(prev => prev - monto);
     setDecreaseReason("");
 
     const newMove = {
@@ -217,7 +222,7 @@ export default function Caja({ window }) {
         { text: `Yape/Plin: S/ ${yapePlin.toFixed(2)}`, fontSize: 9 },
         { text: `Tarjeta: S/ ${tarjeta.toFixed(2)}`, fontSize: 9 },
         { text: "", margin: [0, 7, 0, 0] },
-        { text: `Fin de Caja: ${endCash.toFixed(2)}`, fontSize: 9, bold: true},
+        { text: `Fin de Caja: ${endCash.toFixed(2)}`, fontSize: 9, bold: true },
 
         {
           text: `\nTOTAL VENTA: S/ ${total.toFixed(2)}`,
@@ -299,11 +304,10 @@ export default function Caja({ window }) {
 
   return (
     <div
-      className={`w-full absolute ${
-        window === "Caja"
+      className={`w-full absolute ${window === "Caja"
           ? "top-0 opacity-100"
           : "top-[100px] opacity-0 pointer-events-none"
-      } transition-all ease-in-out duration-200 pb-[100px]`}
+        } transition-all ease-in-out duration-200 pb-[100px]`}
     >
       <button
         onClick={() => generarReporteVenta(userData)}
@@ -330,9 +334,8 @@ export default function Caja({ window }) {
           </button>
 
           <div
-            className={`absolute w-[80%] max-h-max bg-[#eeeeee] top-0 left-0 ${
-              openInput ? "scale-100" : "scale-0"
-            } rounded-[15px] shadow-[0_0_30px_#00000020] p-2 flex flex-col gap-[10px] transition-all ease-in-out duration-200`}
+            className={`absolute w-[80%] max-h-max bg-[#eeeeee] top-0 left-0 ${openInput ? "scale-100" : "scale-0"
+              } rounded-[15px] shadow-[0_0_30px_#00000020] p-2 flex flex-col gap-[10px] transition-all ease-in-out duration-200`}
           >
             <input
               type="text"
@@ -346,17 +349,16 @@ export default function Caja({ window }) {
                 setStartingCash(parseFloat(newStartingCash));
                 setOpenInput(false);
               }}
-              className={`${
-                newStartingCash > 0
+              className={`${newStartingCash > 0
                   ? "bg-[#ffa600]"
                   : "bg-[#e0e0e0] pointer-events-none"
-              } py-3 w-full font-bold text-white text-[20px] rounded-[10px] active:brightness-[0.95] transition-all ease-in-out duration-100`}
+                } py-3 w-full font-bold text-white text-[20px] rounded-[10px] active:brightness-[0.95] transition-all ease-in-out duration-100`}
             >
               Aceptar
             </button>
           </div>
         </div>
-        <p className="font-bold bg-[#70707020] px-2 py-1 max-w-max rounded-[10px] md:text-[25px]">
+        <p className="font-bold bg-[#70707020] my-3 px-2 py-1 max-w-max rounded-[10px] md:text-[25px]">
           Fin de Caja: <b>S/. {formatPrice(endCash + efectivo + tarjeta + yapePlin)}</b>
         </p>
         <div className="flex gap-[10px] w-full">
@@ -383,9 +385,8 @@ export default function Caja({ window }) {
         </button>
         <div className="relative">
           <div
-            className={`absolute w-full max-h-max bg-[#eeeeee] top-0 left-0 md:max-w-[700px] ${
-              decreaseInput ? "scale-100" : "scale-0"
-            } rounded-[15px] shadow-[0_0_30px_#00000020] p-2 flex flex-col gap-[10px] transition-all ease-in-out duration-200`}
+            className={`absolute w-full max-h-max bg-[#eeeeee] top-0 left-0 md:max-w-[700px] ${decreaseInput ? "scale-100" : "scale-0"
+              } rounded-[15px] shadow-[0_0_30px_#00000020] p-2 flex flex-col gap-[10px] transition-all ease-in-out duration-200`}
           >
             <input
               type="text"
@@ -406,11 +407,10 @@ export default function Caja({ window }) {
                 decreaseCash();
                 setDecreaseInput(false);
               }}
-              className={`${
-                decreasedCash > 0
+              className={`${decreasedCash > 0
                   ? "bg-[#ffa600]"
                   : "bg-[#e0e0e0] pointer-events-none"
-              } py-3 w-full font-bold text-white text-[20px] rounded-[10px] active:brightness-[0.95] transition-all ease-in-out duration-100`}
+                } py-3 w-full font-bold text-white text-[20px] rounded-[10px] active:brightness-[0.95] transition-all ease-in-out duration-100`}
             >
               Aceptar
             </button>
@@ -445,30 +445,26 @@ export default function Caja({ window }) {
                       <p className="font-bold text-[20px]">{move.tipo_pago}</p>
                       <div className="flex gap-2 flex-wrap">
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.m_efectivo ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.m_efectivo ? "block" : "hidden"
+                            }`}
                         >
                           {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
                         </p>
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.m_yape ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.m_yape ? "block" : "hidden"
+                            }`}
                         >
                           {move.m_yape}: S/. {formatPrice(move.q_yape)}
                         </p>
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.m_tarjeta ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.m_tarjeta ? "block" : "hidden"
+                            }`}
                         >
                           {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
                         </p>
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.nombre !== "Sin Nombre" ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.nombre !== "Sin Nombre" ? "block" : "hidden"
+                            }`}
                         >
                           {move.nombre}
                         </p>
@@ -477,11 +473,10 @@ export default function Caja({ window }) {
 
                     <div className="flex flex-col items-end">
                       <p
-                        className={`font-[900] text-[20px] ${
-                          move.ing_eg === true
+                        className={`font-[900] text-[20px] ${move.ing_eg === true
                             ? "text-[#26ce6c]"
                             : "text-[#ff3333]"
-                        }`}
+                          }`}
                       >
                         {move.ing_eg === true ? "+" : "-"} S/.{" "}
                         {formatPrice(move.monto_pagado)}
@@ -523,30 +518,26 @@ export default function Caja({ window }) {
                       <p className="font-bold text-[20px]">{move.tipo_pago}</p>
                       <div className="flex gap-2 flex-wrap">
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.m_efectivo ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.m_efectivo ? "block" : "hidden"
+                            }`}
                         >
                           {move.m_efectivo}: S/. {formatPrice(move.q_efe)}
                         </p>
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.m_yape ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.m_yape ? "block" : "hidden"
+                            }`}
                         >
                           {move.m_yape}: S/. {formatPrice(move.q_yape)}
                         </p>
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.m_tarjeta ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.m_tarjeta ? "block" : "hidden"
+                            }`}
                         >
                           {move.m_tarjeta}: S/. {formatPrice(move.q_tar)}
                         </p>
                         <p
-                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${
-                            move.reason ? "block" : "hidden"
-                          }`}
+                          className={`font-bold uppercase px-2 py-1 text-[12px] bg-[#00000010] rounded-full ${move.reason ? "block" : "hidden"
+                            }`}
                         >
                           {move.reason}
                         </p>
@@ -555,11 +546,10 @@ export default function Caja({ window }) {
 
                     <div className="flex flex-col items-end">
                       <p
-                        className={`font-[900] text-[20px] ${
-                          move.ing_eg === true
+                        className={`font-[900] text-[20px] ${move.ing_eg === true
                             ? "text-[#26ce6c]"
                             : "text-[#ff3333]"
-                        }`}
+                          }`}
                       >
                         {move.ing_eg === true ? "+" : "-"} S/.{" "}
                         {formatPrice(move.monto_pagado)}
