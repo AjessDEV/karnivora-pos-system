@@ -1022,157 +1022,78 @@ export default function Pedidos({ window }) {
 
               <div className="flex flex-col gap-3 justify-center mt-6">
                 <button
-                  onClick={() => {
-                    const precioExtras = {
-                      Chorizo: 4.0,
-                      Tocino: 2.0,
-                      Queso: 2.0,
-                      Huevo: 2.0,
-                      Piña: 2.0,
-                    };
+  onClick={() => {
+    let total = 0;
 
-                    const fecha = new Date();
-                    const hora = fecha.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    });
-                    const cliente = orderSelected.nombre || "Cliente";
+    const productosFormateados = orderSelected.lista_productos.map((prod) => {
+      const precioBase = parseFloat(prod.precioBase) || 0;
+      const sumaExtras =
+        prod.extras?.reduce((acc, extra) => acc + (parseFloat(extra.precio) || 0), 0) || 0;
 
-                    const deliveryPrecio = parseFloat(orderSelected.delivery_precio) || 0;
-const totalConDelivery = total + deliveryPrecio;
+      total += precioBase + sumaExtras;
 
-                    let total = 0;
+      return [
+        { text: prod.nombre, fontSize: 10, bold: true },
+        ...(prod.extras?.map((extra) => ({
+          text: `• ${extra.nombre} (+S/ ${extra.precio})`,
+          fontSize: 9,
+        })) || []),
+        {
+          text: `S/ ${(precioBase + sumaExtras).toFixed(2)}`,
+          alignment: "right",
+          fontSize: 10,
+          bold: true,
+        },
+      ];
+    }).flat();
 
-const productosFormateados = orderSelected.lista_productos.map((prod) => {
-  const detalles = [];
-  const precioBase = prod.precio || 0;
-  let sumaExtras = 0;
+    const deliveryPrecio = parseFloat(orderSelected.delivery_precio) || 0;
+    const totalConDelivery = total + deliveryPrecio;
 
-  if (prod.vegetalesSeleccionados?.length) {
-    detalles.push({
-      text: `• ${prod.vegetalesSeleccionados.join(", ")}`,
-      fontSize: 10,
-      margin: [0, 0, 0, 3],
-    });
-  }
+    const docDefinition = {
+      pageSize: { width: 165, height: 'auto' }, // 58mm
+      content: [
+        {
+          text: "COMANDA",
+          alignment: "center",
+          fontSize: 14,
+          bold: true,
+          margin: [0, 0, 0, 10],
+        },
+        {
+          text: `Hora: ${new Date().toLocaleTimeString()}`,
+          fontSize: 10,
+        },
+        {
+          text: `Cliente: ${orderSelected.nombre_cliente || "Sin nombre"}`,
+          fontSize: 10,
+          margin: [0, 0, 0, 10],
+        },
+        {
+          ul: productosFormateados,
+        },
+        {
+          text: `Delivery: S/ ${deliveryPrecio.toFixed(2)}`,
+          alignment: "right",
+          fontSize: 10,
+          margin: [0, 10, 0, 0],
+        },
+        {
+          text: `Total: S/ ${totalConDelivery.toFixed(2)}`,
+          alignment: "right",
+          fontSize: 12,
+          bold: true,
+          margin: [0, 5, 0, 0],
+        },
+      ],
+    };
 
-  if (prod.salsasSeleccionadas?.length) {
-    detalles.push({
-      text: `• Salsas: ${prod.salsasSeleccionadas.join(", ")}`,
-      fontSize: 10,
-      margin: [0, 0, 0, 3],
-    });
-  }
-
-  if (prod.extrasSeleccionados?.length) {
-    detalles.push({
-      text: "• Extras:",
-      fontSize: 10,
-      margin: [0, 2, 0, 0],
-    });
-
-    prod.extrasSeleccionados.forEach((extra) => {
-      const precio = precioExtras[extra] || 0;
-      sumaExtras += precio;
-      detalles.push({
-        text: `   - ${extra}: S/ ${precio.toFixed(2)}`,
-        fontSize: 10,
-        margin: [0, 0, 0, 0],
-      });
-    });
-
-    detalles.push({ text: "", margin: [0, 0, 0, 5] });
-  }
-
-  const precioTotalProducto = precioBase + sumaExtras;
-  total += precioTotalProducto;
-
-  return {
-    columns: [
-      {
-        stack: [
-          {
-            text: prod.nombre,
-            bold: true,
-            fontSize: 13,
-            margin: [0, 0, 0, 3],
-          },
-          ...detalles,
-        ],
-        width: "*",
-      },
-      {
-        text: `S/ ${precioBase.toFixed(2)}`,
-        alignment: "right",
-        fontSize: 10,
-        width: "50",
-        bold: true,
-      },
-    ],
-    margin: [0, 0, 0, 10],
-  };
-});
-
-                    // Nota adicional si hay
-                    const nota = orderSelected.notas
-                      ? [
-                          {
-                            text: "NOTA:",
-                            bold: true,
-                            margin: [0, 20, 0, 5],
-                            fontSize: 12,
-                          },
-                          {
-                            text: orderSelected.notas,
-                            fontSize: 12,
-                          },
-                        ]
-                      : [];
-
-                    // Documento PDF
-                    const docDefinition = {
-                      pageSize: {
-                        width: 165, // 58 mm
-                        height: "auto",
-                      },
-                      pageMargins: [10, 10, 10, 10],
-                      content: [
-                        {
-                          text: `PEDIDO #${orderSelected.id}`,
-                          alignment: "center",
-                          fontSize: 18,
-                          bold: true,
-                          margin: [0, 0, 0, 10],
-                        },
-                        { text: `Hora: ${hora}`, fontSize: 10 },
-                        {
-                          text: `Cliente: ${cliente}`,
-                          fontSize: 10,
-                          margin: [0, 0, 0, 3],
-                        },
-                        {
-                          text: `${orderSelected.tipo_pedido}`,
-                          fontSize: 11,
-                          bold: true,
-                          margin: [0, 0, 0, 10],
-                        },
-                        ...productosFormateados,
-                        ...nota,
-                        {
-  text: `TOTAL: S/ ${totalConDelivery.toFixed(2)}`,
-  alignment: "right",
-  fontSize: 14,
-  bold: true,
-                        },
-                      ],
-                    };
-
-                    pdfMake.createPdf(docDefinition).open();
-                  }}
-                  className="py-4 rounded-[10px] text-[20px] text-white font-bold bg-[#ffa600] cursor-pointer hover:bg-[#ffa60090] active:bg-[#ffa60090] transition-all duration-200"
-                >
-                  Imprimir Comanda
-                </button>
+    pdfMake.createPdf(docDefinition).open();
+  }}
+  className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition"
+>
+  Generar Comanda
+</button>
                 <button
                   onClick={() => setConfirmPaymentMenu(true)}
                   className={`${
