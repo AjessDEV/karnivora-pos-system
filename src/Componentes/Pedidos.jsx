@@ -1159,11 +1159,10 @@ const productosFormateados = orderSelected.lista_productos.map((prod) => {
                         ...productosFormateados,
                         ...nota,
                         {
-                          text: `TOTAL: S/ ${(total + Number(orderSelected.delivery_precio || 0)).toFixed(2)}`,
-                          bold: true,
-                          alignment: "right",
-                          fontSize: 14,
-                          margin: [0, 20, 0, 0],
+  text: `TOTAL: S/ ${totalConDelivery.toFixed(2)}`,
+  alignment: "right",
+  fontSize: 14,
+  bold: true,
                         },
                       ],
                     };
