@@ -1027,23 +1027,36 @@ export default function Pedidos({ window }) {
 
     const productosFormateados = orderSelected.lista_productos.map((prod) => {
       const precioBase = parseFloat(prod.precioBase) || 0;
-      const sumaExtras =
+      const extras =
         prod.extras?.reduce((acc, extra) => acc + (parseFloat(extra.precio) || 0), 0) || 0;
 
-      total += precioBase + sumaExtras;
+      const precioFinal = precioBase + extras;
+      total += precioFinal;
 
       return [
         { text: prod.nombre, fontSize: 10, bold: true },
-        ...(prod.extras?.map((extra) => ({
-          text: `• ${extra.nombre} (+S/ ${extra.precio})`,
-          fontSize: 9,
-        })) || []),
-        {
-          text: `S/ ${(precioBase + sumaExtras).toFixed(2)}`,
-          alignment: "right",
-          fontSize: 10,
-          bold: true,
-        },
+        ...(prod.vegetales?.length
+          ? [{ text: "Vegetales: " + prod.vegetales.join(", "), fontSize: 9 }]
+          : []),
+        ...(prod.salsas?.length
+          ? [{ text: "Salsas: " + prod.salsas.join(", "), fontSize: 9 }]
+          : []),
+        ...(prod.extras?.length
+          ? [
+              {
+                text:
+                  "Extras: " +
+                  prod.extras
+                    .map((extra) => `${extra.nombre} (+${extra.precio})`)
+                    .join(", "),
+                fontSize: 9,
+              },
+            ]
+          : []),
+        ...(prod.notas?.length
+          ? [{ text: "Notas: " + prod.notas, fontSize: 9, italics: true }]
+          : []),
+        { text: "------------------------------", fontSize: 9, margin: [0, 5] },
       ];
     }).flat();
 
@@ -1054,7 +1067,7 @@ export default function Pedidos({ window }) {
       pageSize: { width: 165, height: 'auto' }, // 58mm
       content: [
         {
-          text: "COMANDA",
+          text: `PEDIDO #${orderSelected.id}`,
           alignment: "center",
           fontSize: 14,
           bold: true,
@@ -1070,13 +1083,13 @@ export default function Pedidos({ window }) {
           margin: [0, 0, 0, 10],
         },
         {
-          ul: productosFormateados,
+          stack: productosFormateados,
+          margin: [0, 0, 0, 10],
         },
         {
           text: `Delivery: S/ ${deliveryPrecio.toFixed(2)}`,
           alignment: "right",
           fontSize: 10,
-          margin: [0, 10, 0, 0],
         },
         {
           text: `Total: S/ ${totalConDelivery.toFixed(2)}`,
