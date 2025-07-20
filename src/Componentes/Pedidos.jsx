@@ -1038,6 +1038,9 @@ export default function Pedidos({ window }) {
                     });
                     const cliente = orderSelected.nombre || "Cliente";
 
+                    const deliveryPrecio = parseFloat(orderSelected.delivery_precio) || 0;
+const totalConDelivery = total + deliveryPrecio;
+
                     let total = 0;
 
 const productosFormateados = orderSelected.lista_productos.map((prod) => {
@@ -1156,7 +1159,7 @@ const productosFormateados = orderSelected.lista_productos.map((prod) => {
                         ...productosFormateados,
                         ...nota,
                         {
-                          text: `TOTAL: S/ ${(total + parseFloat(orderSelected.delivery_precio || 0)).toFixed(2)}`
+                          text: `TOTAL: S/ ${(total + Number(orderSelected.delivery_precio || 0)).toFixed(2)}`,
                           bold: true,
                           alignment: "right",
                           fontSize: 14,
