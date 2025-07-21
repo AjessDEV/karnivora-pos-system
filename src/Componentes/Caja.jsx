@@ -387,7 +387,7 @@ export default function Caja({ window }) {
           </div>
         </div>
         <p className="font-bold bg-[#70707020] my-3 px-2 py-1 max-w-max rounded-[10px] md:text-[25px]">
-          Fin de Caja: <b>S/. {formatPrice(endCash + efectivo + tarjeta + yapePlin)}</b>
+          Fin de Caja: <b>S/. {formatPrice(endCash + efectivo)}</b>
         </p>
         <div className="flex gap-[10px] w-full">
           <p className="font-bold w-full md:text-[25px]">
