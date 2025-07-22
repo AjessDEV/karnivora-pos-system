@@ -243,7 +243,7 @@ export default function Caja({ window }) {
         { text: `Yape/Plin: S/ ${yapePlin.toFixed(2)}`, fontSize: 9 },
         { text: `Tarjeta: S/ ${tarjeta.toFixed(2)}`, fontSize: 9 },
         { text: "", margin: [0, 7, 0, 0] },
-        { text: `Fin de Caja: ${endCash.toFixed(2)}`, fontSize: 9, bold: true },
+        { text: `Fin de Caja: ${(endCash + efectivo).toFixed(2)}`, fontSize: 9, bold: true },
 
         {
           text: `\nTOTAL VENTA: S/ ${total.toFixed(2)}`,
